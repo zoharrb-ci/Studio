@@ -202,6 +202,20 @@ const URL = 'https://script.google.com/macros/s/AKfycbzNS2b2YtYUYed_-3G6QhQudUAj
 let lessons = [], teachers = [], selectedT = null;
 const DAYS = ['ראשון', 'שני', 'שלישי', 'רביעי', 'חמישי', 'שישי', 'שבת'];
 
+/* --- API call via Script Tag (JSONP) to bypass CORS blocks --- */
+function apiCall(paramsObj, onSuccess) {
+  const cbName = 'cb_' + Date.now() + Math.floor(Math.random()*10000);
+  window[cbName] = (res) => {
+    delete window[cbName];
+    if (onSuccess) onSuccess(res);
+  };
+  paramsObj.callback = cbName;
+  const params = new URLSearchParams(paramsObj).toString();
+  const s = document.createElement('script');
+  s.src = `${URL}?${params}`;
+  document.head.appendChild(s);
+}
+
 /* --- Custom Dialogs Logic --- */
 function showAlert(msg, title = 'הודעה') {
   document.getElementById('alert-title').textContent = title;
@@ -283,10 +297,7 @@ setInterval(updateDateTime, 60000);
 
 function loadData() {
   setStatus('מעדכן נתונים...', true);
-  const cb = 'cb_' + Date.now();
-  window[cb] = (data) => {
-    delete window[cb];
-    
+  apiCall({ action: 'load' }, (data) => {
     lessons = data.sort((a, b) => {
       const dateA = cleanDateDisplay(a.date).split('/').reverse().join('');
       const dateB = cleanDateDisplay(b.date).split('/').reverse().join('');
@@ -303,10 +314,7 @@ function loadData() {
     render();
     renderChips();
     setStatus('מחובר ומעודכן ✓', false);
-  };
-  const s = document.createElement('script');
-  s.src = `${URL}?callback=${cb}&t=${Date.now()}`;
-  document.head.appendChild(s);
+  });
 }
 
 function renderChips() {
@@ -412,20 +420,20 @@ function render() {
   document.getElementById('s-wait').textContent = lessons.length - lessons.filter(l => l.teacher).length;
 }
 
-async function updateCell(rowIndex, field, value) {
+function updateCell(rowIndex, field, value) {
   setStatus('שומר שינוי...', true);
-  await fetch(URL, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify({ action: 'update', rowIndex, field, value }) });
-  setStatus('נשמר', false);
-  if(field === 'teacher') renderChips();
+  apiCall({ action: 'update', rowIndex, field, value }, () => {
+    setStatus('נשמר', false);
+    if(field === 'teacher') renderChips();
+  });
 }
 
 function deleteRow(rowIndex) {
-  showConfirm(async () => {
+  showConfirm(() => {
     setStatus('מוחק...', true);
     lessons = lessons.filter(l => l.rowIndex !== rowIndex);
     render();
-    await fetch(URL, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify({ action: 'deleteRow', rowIndex }) });
-    loadData();
+    apiCall({ action: 'deleteRow', rowIndex }, () => loadData());
   });
 }
 
@@ -494,7 +502,7 @@ function validateTime() {
   return true;
 }
 
-async function saveNewLesson() {
+function saveNewLesson() {
   const isDateValid = validateAndUpdateDay();
   const isTimeValid = validateTime();
   
@@ -528,13 +536,12 @@ async function saveNewLesson() {
   });
   render();
 
-  await fetch(URL, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify(data) });
-  
-  closeAddLessonModal();
-  btn.textContent = 'שמור שיעור';
-  btn.disabled = false;
-  
-  setTimeout(loadData, 2500); 
+  apiCall(data, () => {
+    closeAddLessonModal();
+    btn.textContent = 'שמור שיעור';
+    btn.disabled = false;
+    loadData();
+  });
 }
 
 loadData();
