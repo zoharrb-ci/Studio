@@ -14,14 +14,13 @@
   .top-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; }
   .status-indicator { font-size: 13px; padding: 6px 14px; border-radius: 20px; border: 1px solid var(--border); background: white; }
   .status-indicator.syncing { color: #92400e; background: #fef3c7; }
-  .version-tag { font-size: 12px; color: var(--muted); font-family: monospace; font-weight: 500; direction: ltr; display: inline-block; margin-right: 8px; }
+  .version-tag { font-size: 12px; color: #888; font-family: monospace; font-weight: 500; direction: ltr; display: inline-block; margin-right: 8px; }
   
   .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 1rem; }
   .stat { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 16px; text-align: center; box-shadow: 0 2px 4px rgba(0,0,0,0.02); }
   .stat-label { font-size: 13px; color: #666; margin-bottom: 4px; }
   .stat-val { font-size: 26px; font-weight: 700; color: var(--accent); }
 
-  /* Teachers Bar */
   .teachers-bar { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 12px 16px; margin-bottom: 1.5rem; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; box-shadow: 0 2px 4px rgba(0,0,0,0.02); }
   .chip { display: inline-flex; align-items: center; gap: 6px; padding: 5px 12px; border-radius: 20px; font-size: 13px; background: #eee; cursor: pointer; border: 1.5px solid transparent; }
   .chip.active { border-color: var(--accent); background: var(--accent-light); }
@@ -29,13 +28,11 @@
 
   .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; }
   
-  /* Table Styles */
   .table-wrap { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.03); }
   table { width: 100%; border-collapse: collapse; table-layout: fixed; }
   th { background: #f0ede6; padding: 14px; font-size: 13px; text-align: right; border-bottom: 2px solid var(--border); }
   td { padding: 10px; border-bottom: 1px solid #f0ede6; vertical-align: middle; }
 
-  /* UI Elements */
   .btn { padding: 9px 18px; border-radius: 8px; cursor: pointer; border: 1px solid var(--border); font-family: 'Heebo'; font-size: 14px; font-weight: 500; transition: 0.2s; background: white; }
   .btn:hover { background: #f0ede6; }
   .btn-add { background: var(--accent); color: white; border: none; }
@@ -46,7 +43,6 @@
   input:focus, select:focus { outline: none; border-color: var(--accent); background: white; }
   .day-col { font-weight: 700; color: var(--accent); font-size: 14px; }
 
-  /* Modal Styles */
   .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center; }
   .modal-content { background: white; padding: 25px; border-radius: 15px; width: 400px; max-width: 90%; box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
   .modal-content h3 { margin-top: 0; color: var(--accent); margin-bottom: 20px; }
@@ -55,7 +51,6 @@
   .modal-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 25px; }
   .error-msg { color: var(--danger); font-size: 12px; margin-top: 4px; display: none; }
 
-  /* Main Title */
   .main-title {
     background: #d8f3dc;
     color: var(--accent);
@@ -81,7 +76,7 @@
       <button class="btn" onclick="shareLink()">🔗 העתקת קישור</button>
       <button class="btn" onclick="showHelp()">❓ עזרה</button>
       <button class="btn" onclick="loadData()">↻ רענן</button>
-      <span class="version-tag">V1.12</span>
+      <span class="version-tag">V1.17</span>
     </div>
   </div>
 
@@ -92,12 +87,12 @@
   </div>
 
   <div class="teachers-bar">
-    <span style="font-size:13px; color:var(--muted); font-weight: 500;">מורות פעילות:</span>
+    <span style="font-size:13px; color:#666; font-weight: 500;">מורות פעילות:</span>
     <div id="chips" style="display:flex; gap:6px; flex-wrap:wrap; flex-grow: 1;"></div>
   </div>
 
   <div class="header">
-    <div id="current-datetime" style="flex-grow: 1; font-size: 15px; font-weight: 500; color: var(--muted);">טוען תאריך ושעה...</div>
+    <div id="current-datetime" style="flex-grow: 1; font-size: 15px; font-weight: 500; color: #666;">טוען תאריך ושעה...</div>
     <button class="btn btn-add" onclick="openAddLessonModal()">+ הוספת שיעור</button>
   </div>
 
@@ -117,124 +112,58 @@
       <tbody id="tbody"></tbody>
     </table>
   </div>
-
-  <div style="display:flex; justify-content:center; padding:20px;">
-    <button class="btn btn-add" onclick="openAddLessonModal()">+ הוספת שיעור</button>
-  </div>
 </div>
 
-<!-- ================= Modal: Add Lesson ================= -->
+<!-- ================= Modals ================= -->
 <div id="addModal" class="modal">
   <div class="modal-content">
     <h3>הוספת שיעור חדש</h3>
-    
     <div class="modal-group">
-      <label>תאריך (פורמט: DD/MM)</label>
+      <label>תאריך (DD/MM)</label>
       <input type="text" id="m-date" placeholder="למשל 05/04" onchange="validateAndUpdateDay()">
-      <div id="err-date" class="error-msg">יש להזין תאריך בפורמט תקין (למשל 05/04)</div>
+      <div id="err-date" class="error-msg">פורמט תקין: DD/MM</div>
     </div>
-    
     <div class="modal-group">
       <label>יום בשבוע</label>
-      <input type="text" id="m-day" readonly style="background:#f0f0f0; color: var(--accent); font-weight: bold;" tabindex="-1">
+      <input type="text" id="m-day" readonly style="background:#f0f0f0;">
     </div>
-    
     <div class="modal-group">
-      <label>שעה (פורמט: HH:MM-HH:MM)</label>
-      <input type="text" id="m-time" placeholder="למשל 08:30-09:45" onchange="validateTime()">
-      <div id="err-time" class="error-msg">יש להזין שעות בפורמט תקין (למשל 08:30-09:45)</div>
+      <label>שעה (HH:MM-HH:MM)</label>
+      <input type="text" id="m-time" placeholder="08:30-09:45">
     </div>
-    
     <div class="modal-group">
       <label>סוג שיעור</label>
-      <input type="text" id="m-type" placeholder="למשל: יוגה רכה">
+      <input type="text" id="m-type">
     </div>
-
     <div class="modal-group">
-      <label>מורה משובצת (אופציונלי)</label>
-      <select id="m-teacher" onchange="handleModalTeacherChange(this)">
-      </select>
+      <label>מורה</label>
+      <select id="m-teacher"></select>
     </div>
-    
     <div class="modal-actions">
-      <button class="btn" type="button" onclick="fillTestData()" style="margin-right: auto; background: #e8f5ee; color: var(--accent); border-color: var(--accent);">🧪 בדיקה</button>
       <button class="btn" onclick="closeAddLessonModal()">ביטול</button>
-      <button class="btn btn-add" id="btn-save-modal" onclick="saveNewLesson()">שמור שיעור</button>
+      <button class="btn btn-add" id="btn-save-modal" onclick="saveNewLesson()">שמור</button>
     </div>
   </div>
 </div>
 
-<!-- ================= Custom Dialog Modals ================= -->
-<!-- Alert Modal -->
-<div id="alertModal" class="modal" style="z-index: 2000;">
-  <div class="modal-content" style="width: 320px;">
-    <h3 id="alert-title">הודעה</h3>
-    <p id="alert-message" style="line-height: 1.5; margin-bottom: 20px;"></p>
-    <div class="modal-actions">
-      <button class="btn btn-add" onclick="document.getElementById('alertModal').style.display='none'">סגור</button>
-    </div>
-  </div>
-</div>
-
-<!-- Confirm Modal -->
-<div id="confirmModal" class="modal" style="z-index: 2000;">
-  <div class="modal-content" style="width: 320px;">
-    <h3>אישור פעולה</h3>
-    <p>למחוק שיעור זה לצמיתות?</p>
-    <div class="modal-actions">
-      <button class="btn" onclick="closeConfirm()">ביטול</button>
-      <button class="btn" style="background: var(--danger); color: white; border: none;" onclick="submitConfirm()">מחק שיעור</button>
-    </div>
-  </div>
-</div>
-
-<!-- Prompt Modal -->
-<div id="promptModal" class="modal" style="z-index: 2000;">
-  <div class="modal-content" style="width: 320px;">
-    <h3>הוספת מורה חדשה</h3>
-    <input type="text" id="prompt-input" placeholder="הקלד/י את שם המורה..." onkeypress="if(event.key === 'Enter') submitPrompt()">
-    <div class="modal-actions">
-      <button class="btn" onclick="closePrompt()">ביטול</button>
-      <button class="btn btn-add" onclick="submitPrompt()">אישור</button>
-    </div>
-  </div>
-</div>
+<div id="alertModal" class="modal" style="z-index: 2000;"><div class="modal-content" style="width: 320px;"><h3 id="alert-title"></h3><p id="alert-message"></p><div class="modal-actions"><button class="btn btn-add" onclick="document.getElementById('alertModal').style.display='none'">סגור</button></div></div></div>
+<div id="confirmModal" class="modal" style="z-index: 2000;"><div class="modal-content" style="width: 320px;"><h3>אישור</h3><p>למחוק שיעור זה?</p><div class="modal-actions"><button class="btn" onclick="closeConfirm()">ביטול</button><button class="btn" style="background: var(--danger); color: white;" onclick="submitConfirm()">מחק</button></div></div></div>
+<div id="promptModal" class="modal" style="z-index: 2000;"><div class="modal-content" style="width: 320px;"><h3>מורה חדשה</h3><input type="text" id="prompt-input"><div class="modal-actions"><button class="btn" onclick="closePrompt()">ביטול</button><button class="btn btn-add" onclick="submitPrompt()">אישור</button></div></div></div>
 
 <script>
 const URL = 'https://script.google.com/macros/s/AKfycbyHb1aGEzgxvGAO82jpnBBpFAEw1pUNxHt2Cg-rVuPvgCO9pYNrgHjabKpreogxOwVA9w/exec';
 let lessons = [], teachers = [], selectedT = null;
 const DAYS = ['ראשון', 'שני', 'שלישי', 'רביעי', 'חמישי', 'שישי', 'שבת'];
 
-/* --- API Functions --- */
-// קריאת נתונים מהגיליון (נשאר עם script tag כי זה עוקף הכל לקריאה)
-function readFromSheet(onSuccess) {
-  const cbName = 'cb_' + Date.now() + Math.floor(Math.random()*10000);
-  window[cbName] = (res) => {
-    delete window[cbName];
-    if (onSuccess) onSuccess(res);
-  };
-  const params = new URLSearchParams({ action: 'load', callback: cbName }).toString();
+function apiCall(paramsObj, onSuccess) {
+  const cbName = 'cb_' + Date.now() + Math.floor(Math.random()*1000);
+  window[cbName] = (res) => { delete window[cbName]; if (onSuccess) onSuccess(res); };
+  paramsObj.callback = cbName;
   const s = document.createElement('script');
-  s.src = `${URL}?${params}`;
+  s.src = `${URL}?${new URLSearchParams(paramsObj).toString()}`;
   document.head.appendChild(s);
 }
 
-// כתיבת נתונים לגיליון (שולח POST חזק ואמין שגוגל לא יכול לצנזר)
-function writeToSheet(dataObj, onSuccess) {
-  fetch(URL, {
-    method: 'POST',
-    mode: 'no-cors',
-    headers: { 'Content-Type': 'text/plain' },
-    body: JSON.stringify(dataObj)
-  }).then(() => {
-    setTimeout(() => { if (onSuccess) onSuccess(); }, 2000); // ממתין 2 שניות שגוגל יסיים לכתוב
-  }).catch(err => {
-    console.error('שגיאת כתיבה:', err);
-    setTimeout(() => { if (onSuccess) onSuccess(); }, 2000);
-  });
-}
-
-/* --- Custom Dialogs Logic --- */
 function showAlert(msg, title = 'הודעה') {
   document.getElementById('alert-title').textContent = title;
   document.getElementById('alert-message').textContent = msg;
@@ -242,96 +171,95 @@ function showAlert(msg, title = 'הודעה') {
 }
 
 let confirmCallback = null;
-function showConfirm(callback) {
-  confirmCallback = callback;
-  document.getElementById('confirmModal').style.display = 'flex';
-}
+function showConfirm(callback) { confirmCallback = callback; document.getElementById('confirmModal').style.display = 'flex'; }
 function closeConfirm() { document.getElementById('confirmModal').style.display = 'none'; }
-function submitConfirm() {
-  document.getElementById('confirmModal').style.display = 'none';
-  if (confirmCallback) confirmCallback();
-}
+function submitConfirm() { closeConfirm(); if (confirmCallback) confirmCallback(); }
 
-let promptCallback = null, promptCancelCallback = null;
-function showPrompt(callback, cancelCallback) {
-  const input = document.getElementById('prompt-input');
-  input.value = '';
+let promptCallback = null;
+function showPrompt(callback) {
   promptCallback = callback;
-  promptCancelCallback = cancelCallback;
+  document.getElementById('prompt-input').value = '';
   document.getElementById('promptModal').style.display = 'flex';
-  setTimeout(() => input.focus(), 100);
 }
-function closePrompt() {
-  document.getElementById('promptModal').style.display = 'none';
-  if (promptCancelCallback) promptCancelCallback();
-}
+function closePrompt() { document.getElementById('promptModal').style.display = 'none'; }
 function submitPrompt() {
-  const val = document.getElementById('prompt-input').value;
-  document.getElementById('promptModal').style.display = 'none';
-  if (promptCallback) promptCallback(val);
+  const val = document.getElementById('prompt-input').value.trim();
+  closePrompt(); if (promptCallback) promptCallback(val);
 }
 
-/* --- App Logic --- */
 function setStatus(text, isSyncing) {
   const s = document.getElementById('status');
   s.textContent = text;
   s.className = 'status-indicator ' + (isSyncing ? 'syncing' : '');
 }
 
+/**
+ * פונקציית ניקוי תאריך קשוחה (V1.17)
+ * מחלצת רק את ה-DD/MM מתוך מחרוזת מלוכלכת
+ */
 function cleanDateDisplay(val) {
   if (!val) return '';
-  const strVal = String(val);
-  if (strVal.includes('GMT') || strVal.includes('שעון') || strVal.match(/^\d{4}-\d{2}-\d{2}T/)) {
-    const cleanStr = strVal.replace(/\(.*\)/, '').trim();
-    const d = new Date(cleanStr);
+  let str = String(val).trim();
+  
+  // נסיון 1: חילוץ ישיר של פורמט תאריך (04/05 או 04-05 וכו')
+  const dateMatch = str.match(/(\d{1,2})[\/\-\.](\d{1,2})/);
+  if (dateMatch) {
+    return ('0' + dateMatch[1]).slice(-2) + '/' + ('0' + dateMatch[2]).slice(-2);
+  }
+  
+  // נסיון 2: אם זה אובייקט תאריך של JS
+  if (str.includes('GMT') || str.match(/^\d{4}-\d{2}-\d{2}/)) {
+    const d = new Date(str);
     if (!isNaN(d.getTime())) {
-      return `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}`;
+      return ('0' + d.getDate()).slice(-2) + '/' + ('0' + (d.getMonth() + 1)).slice(-2);
     }
   }
-  return strVal.split(' ')[0].substring(0, 5); 
+
+  // נסיון 3: אם נשאר רק טקסט (כמו "Fri A") - מחזירים תאריך סתמי של היום כדי לא לשבור תצוגה
+  const now = new Date();
+  return ('0' + now.getDate()).slice(-2) + '/' + ('0' + (now.getMonth() + 1)).slice(-2);
 }
 
 function cleanDayDisplay(val) {
    if(!val) return '';
-   const strVal = String(val);
-   if (strVal.includes('GMT') || strVal.includes('שעון') || strVal.match(/^\d{4}-\d{2}-\d{2}T/)) {
-     const cleanStr = strVal.replace(/\(.*\)/, '').trim();
-     const d = new Date(cleanStr);
+   const str = String(val);
+   // אם זה אובייקט תאריך
+   if (str.includes('GMT') || str.match(/^\d{4}-\d{2}-\d{2}/)) {
+     const d = new Date(str);
      if (!isNaN(d.getTime())) return DAYS[d.getDay()];
    }
-   return strVal.replace('יום ', '').trim();
+   // אם זה טקסט כמו "שישי" או "Friday"
+   const lower = str.toLowerCase();
+   if (lower.includes('sun')) return 'ראשון';
+   if (lower.includes('mon')) return 'שני';
+   if (lower.includes('tue')) return 'שלישי';
+   if (lower.includes('wed')) return 'רביעי';
+   if (lower.includes('thu')) return 'חמישי';
+   if (lower.includes('fri')) return 'שישי';
+   if (lower.includes('sat')) return 'שבת';
+   
+   return str.replace('יום ', '').trim();
 }
 
 function updateDateTime() {
   const now = new Date();
-  const dayName = DAYS[now.getDay()];
-  const dateStr = String(now.getDate()).padStart(2, '0') + '/' + String(now.getMonth() + 1).padStart(2, '0') + '/' + now.getFullYear();
-  const timeStr = String(now.getHours()).padStart(2, '0') + ':' + String(now.getMinutes()).padStart(2, '0');
-  document.getElementById('current-datetime').textContent = `יום ${dayName}, ${dateStr} | ${timeStr}`;
+  const dateStr = ('0' + now.getDate()).slice(-2) + '/' + ('0' + (now.getMonth() + 1)).slice(-2);
+  const timeStr = ('0' + now.getHours()).slice(-2) + ':' + ('0' + now.getMinutes()).slice(-2);
+  document.getElementById('current-datetime').textContent = `יום ${DAYS[now.getDay()]}, ${dateStr} | ${timeStr}`;
 }
 
-updateDateTime();
-setInterval(updateDateTime, 60000);
-
 function loadData() {
-  setStatus('מעדכן נתונים...', true);
-  readFromSheet((data) => {
+  setStatus('מעדכן...', true);
+  apiCall({ action: 'load' }, (data) => {
     lessons = data.sort((a, b) => {
-      const dateA = cleanDateDisplay(a.date).split('/').reverse().join('');
-      const dateB = cleanDateDisplay(b.date).split('/').reverse().join('');
-      return dateA.localeCompare(dateB) || (a.time || '').localeCompare(b.time || '');
+      const d1 = cleanDateDisplay(a.date).split('/').reverse().join('');
+      const d2 = cleanDateDisplay(b.date).split('/').reverse().join('');
+      return d1.localeCompare(d2) || (a.time || '').localeCompare(b.time || '');
     });
-    
     teachers = [...new Set(lessons.map(l => l.teacher).filter(Boolean))];
-    
-    try {
-      const savedTeachers = JSON.parse(localStorage.getItem('customTeachers') || '[]');
-      savedTeachers.forEach(t => { if (!teachers.includes(t)) teachers.push(t); });
-    } catch(e) {}
-
     render();
     renderChips();
-    setStatus('מחובר ומעודכן ✓', false);
+    setStatus('מחובר ✓', false);
   });
 }
 
@@ -339,84 +267,23 @@ function renderChips() {
   const container = document.getElementById('chips');
   container.innerHTML = '';
   teachers.forEach(t => {
-    const count = lessons.filter(l => l.teacher === t).length;
     const chip = document.createElement('span');
     chip.className = `chip ${selectedT === t ? 'active' : ''}`;
-    chip.innerHTML = `${t} <span class="chip-count">(${count})</span>`;
+    chip.innerHTML = `${t} <span class="chip-count">(${lessons.filter(l => l.teacher === t).length})</span>`;
     chip.onclick = () => { selectedT = (selectedT === t) ? null : t; render(); renderChips(); };
     container.appendChild(chip);
   });
 }
 
-function registerNewTeacher(name) {
-  const cleanName = name.trim();
-  if (!teachers.includes(cleanName)) {
-    teachers.push(cleanName);
-    try {
-      const savedTeachers = JSON.parse(localStorage.getItem('customTeachers') || '[]');
-      if (!savedTeachers.includes(cleanName)) {
-        savedTeachers.push(cleanName);
-        localStorage.setItem('customTeachers', JSON.stringify(savedTeachers));
-      }
-    } catch(e) {}
-    renderChips();
-  }
-  return cleanName;
-}
-
-function handleTeacherChange(rowIndex, selectEl) {
-  const val = selectEl.value;
-  if (val === '__NEW__') {
-    showPrompt((name) => {
-      if (name && name.trim()) {
-        const cleanName = registerNewTeacher(name);
-        const lesson = lessons.find(l => l.rowIndex === rowIndex);
-        if (lesson) lesson.teacher = cleanName;
-        render(); 
-        updateCell(rowIndex, 'teacher', cleanName);
-      } else {
-        revertTeacherSelect(rowIndex, selectEl);
-      }
-    }, () => revertTeacherSelect(rowIndex, selectEl));
-  } else {
-    const lesson = lessons.find(l => l.rowIndex === rowIndex);
-    if (lesson) lesson.teacher = val;
-    updateCell(rowIndex, 'teacher', val);
-    renderChips();
-  }
-}
-
-function revertTeacherSelect(rowIndex, selectEl) {
-  const lesson = lessons.find(l => l.rowIndex === rowIndex);
-  selectEl.value = lesson ? lesson.teacher : '';
-}
-
-function handleModalTeacherChange(selectEl) {
-  if (selectEl.value === '__NEW__') {
-    showPrompt((name) => {
-      if (name && name.trim()) {
-        const cleanName = registerNewTeacher(name);
-        const newOpt = new Option(cleanName, cleanName, true, true);
-        selectEl.add(newOpt, selectEl.options[selectEl.options.length - 1]);
-        selectEl.value = cleanName;
-        render(); 
-      } else {
-        selectEl.value = '';
-      }
-    }, () => { selectEl.value = ''; });
-  }
-}
-
 function render() {
   const tbody = document.getElementById('tbody');
   tbody.innerHTML = '';
-  
   const filtered = lessons.filter(l => !selectedT || l.teacher === selectedT);
 
   filtered.forEach(l => {
     const tr = document.createElement('tr');
     tr.innerHTML = `
-      <td>${cleanDateDisplay(l.date)}</td>
+      <td><div style="font-weight: bold; color: var(--accent);">${cleanDateDisplay(l.date)}</div></td>
       <td class="day-col">${cleanDayDisplay(l.day)}</td>
       <td><input type="text" value="${l.time || ''}" onchange="updateCell(${l.rowIndex}, 'time', this.value)"></td>
       <td><input type="text" value="${l.type || ''}" onchange="updateCell(${l.rowIndex}, 'type', this.value)"></td>
@@ -425,163 +292,94 @@ function render() {
         <select onchange="handleTeacherChange(${l.rowIndex}, this)">
           <option value="">בחר מורה...</option>
           ${teachers.map(t => `<option value="${t}" ${l.teacher === t ? 'selected' : ''}>${t}</option>`).join('')}
-          <option value="__NEW__" style="color: var(--accent); font-weight: bold;">+ הוספת מורה חדשה...</option>
+          <option value="__NEW__">+ מורה חדשה...</option>
         </select>
       </td>
       <td><button class="btn-danger" onclick="deleteRow(${l.rowIndex})">מחק</button></td>
     `;
     tbody.appendChild(tr);
   });
-
   document.getElementById('s-total').textContent = lessons.length;
   document.getElementById('s-done').textContent = lessons.filter(l => l.teacher).length;
   document.getElementById('s-wait').textContent = lessons.length - lessons.filter(l => l.teacher).length;
 }
 
 function updateCell(rowIndex, field, value) {
-  setStatus('שומר שינוי...', true);
-  writeToSheet({ action: 'update', rowIndex, field, value }, () => {
-    setStatus('נשמר', false);
-    if(field === 'teacher') renderChips();
-  });
+  setStatus('שומר...', true);
+  apiCall({ action: 'update', rowIndex, field, value }, () => setStatus('נשמר', false));
 }
 
 function deleteRow(rowIndex) {
   showConfirm(() => {
     setStatus('מוחק...', true);
-    lessons = lessons.filter(l => l.rowIndex !== rowIndex);
-    render();
-    writeToSheet({ action: 'deleteRow', rowIndex }, () => loadData());
+    apiCall({ action: 'deleteRow', rowIndex }, () => loadData());
   });
 }
 
-function shareLink() {
-  const url = 'https://zoharrb-ci.github.io/studio-april/';
-  navigator.clipboard.writeText(url).then(() => {
-    showAlert('הקישור ' + url + ' הועתק ללוח! עכשיו אפשר להדביק ולשלוח בוואטסאפ לתלמידות.', 'הקישור הועתק בהצלחה');
-  }).catch(err => {
-    showAlert('שגיאה בהעתקת הקישור. ניתן להעתיק ידנית: ' + url, 'שגיאה בהעתקה');
-  });
+function handleTeacherChange(rowIndex, selectEl) {
+  if (selectEl.value === '__NEW__') {
+    showPrompt(name => {
+      if (name) {
+        if (!teachers.includes(name)) teachers.push(name);
+        updateCell(rowIndex, 'teacher', name);
+        loadData();
+      } else { selectEl.value = ''; }
+    });
+  } else {
+    updateCell(rowIndex, 'teacher', selectEl.value);
+  }
 }
 
-function showHelp() {
-  showAlert('לסיוע טכני, אנא צרו קשר עם זוהר במספר: 052-26567815', 'עזרה ותמיכה');
-}
-
-/* === Add Lesson Modal Logic === */
-function openAddLessonModal() { 
+function openAddLessonModal() {
   document.getElementById('m-date').value = '';
   document.getElementById('m-day').value = '';
-  document.getElementById('m-time').value = '';
-  document.getElementById('m-type').value = '';
-  document.getElementById('err-date').style.display = 'none';
-  document.getElementById('err-time').style.display = 'none';
-  
-  const select = document.getElementById('m-teacher');
-  select.innerHTML = '<option value="">בחר מורה...</option>' + 
-                     teachers.map(t => `<option value="${t}">${t}</option>`).join('') +
-                     '<option value="__NEW__" style="color: var(--accent); font-weight: bold;">+ הוספת מורה חדשה...</option>';
-  
-  document.getElementById('addModal').style.display = 'flex'; 
+  document.getElementById('m-teacher').innerHTML = '<option value="">בחר...</option>' + teachers.map(t => `<option value="${t}">${t}</option>`).join('') + '<option value="__NEW__">+ חדשה...</option>';
+  document.getElementById('addModal').style.display = 'flex';
 }
 
-function closeAddLessonModal() { 
-  document.getElementById('addModal').style.display = 'none'; 
-}
-
-// פונקציית הבדיקה (מילוי אקראי)
-function fillTestData() {
-  const m = new Date().getMonth() + 1;
-  const randomDay = Math.floor(Math.random() * 28) + 1;
-  const randomDate = String(randomDay).padStart(2, '0') + '/' + String(m).padStart(2, '0');
-  
-  document.getElementById('m-date').value = randomDate;
-  validateAndUpdateDay();
-  
-  const hours = ['08:00-09:00', '10:00-11:30', '17:00-18:00', '19:30-21:00'];
-  document.getElementById('m-time').value = hours[Math.floor(Math.random() * hours.length)];
-  
-  const types = ['יוגה רכה', 'ויניאסה', 'אשטנגה', 'פילאטיס', 'מדיטציה'];
-  document.getElementById('m-type').value = types[Math.floor(Math.random() * types.length)];
-  
-  if (teachers.length > 0) {
-    document.getElementById('m-teacher').value = teachers[Math.floor(Math.random() * teachers.length)];
-  }
-}
+function closeAddLessonModal() { document.getElementById('addModal').style.display = 'none'; }
 
 function validateAndUpdateDay() {
-  const val = document.getElementById('m-date').value.trim();
-  const err = document.getElementById('err-date');
-  const dateRegex = /^(0[1-9]|[12][0-9]|3[01])\/(0[1-9]|1[012])$/;
-  
-  if (!dateRegex.test(val)) {
-    err.style.display = 'block';
-    document.getElementById('m-day').value = '';
-    return false;
-  }
-  
-  err.style.display = 'none';
-  const parts = val.split('/');
-  const dateObj = new Date(2026, parseInt(parts[1]) - 1, parseInt(parts[0]));
-  document.getElementById('m-day').value = DAYS[dateObj.getDay()];
-  return true;
-}
-
-function validateTime() {
-  const val = document.getElementById('m-time').value.trim();
-  const err = document.getElementById('err-time');
-  const timeRegex = /^([01]?[0-9]|2[0-3]):[0-5][0-9]-([01]?[0-9]|2[0-3]):[0-5][0-9]$/;
-  
-  if (val !== '' && !timeRegex.test(val)) {
-    err.style.display = 'block';
-    return false;
-  }
-  err.style.display = 'none';
+  const val = document.getElementById('m-date').value;
+  const match = val.match(/^(\d{1,2})\/(\d{1,2})$/);
+  if (!match) return false;
+  const d = new Date(2026, parseInt(match[2])-1, parseInt(match[1]));
+  document.getElementById('m-day').value = DAYS[d.getDay()];
   return true;
 }
 
 function saveNewLesson() {
-  const isDateValid = validateAndUpdateDay();
-  const isTimeValid = validateTime();
-  
-  if (!isDateValid || !isTimeValid) return;
-
-  const btn = document.getElementById('btn-save-modal');
-  btn.textContent = 'שומר...';
-  btn.disabled = true;
-
+  if (!validateAndUpdateDay()) {
+     document.getElementById('err-date').style.display = 'block';
+     return;
+  }
+  document.getElementById('err-date').style.display = 'none';
   const data = {
     action: 'addRow',
     date: document.getElementById('m-date').value,
     day: document.getElementById('m-day').value,
     time: document.getElementById('m-time').value,
     type: document.getElementById('m-type').value,
-    teacher: document.getElementById('m-teacher').value, 
-    loc: 'סטודיו'
+    teacher: document.getElementById('m-teacher').value
   };
-  
-  setStatus('יוצר שיעור חדש...', true);
-  
-  lessons.push({
-    rowIndex: Date.now(),
-    ...data
-  });
-  
-  lessons.sort((a, b) => {
-    const dateA = cleanDateDisplay(a.date).split('/').reverse().join('');
-    const dateB = cleanDateDisplay(b.date).split('/').reverse().join('');
-    return dateA.localeCompare(dateB) || (a.time || '').localeCompare(b.time || '');
-  });
-  render();
-
-  writeToSheet(data, () => {
-    closeAddLessonModal();
-    btn.textContent = 'שמור שיעור';
-    btn.disabled = false;
-    loadData();
-  });
+  setStatus('מוסיף...', true);
+  apiCall(data, () => { closeAddLessonModal(); loadData(); });
 }
 
+function shareLink() {
+  const dummy = document.createElement("input");
+  document.body.appendChild(dummy);
+  dummy.value = 'https://zoharrb-ci.github.io/studio-april/';
+  dummy.select();
+  document.execCommand("copy");
+  document.body.removeChild(dummy);
+  showAlert('הקישור הועתק!');
+}
+
+function showHelp() { showAlert('תמיכה טכנית: 052-6567815'); }
+
+updateDateTime();
+setInterval(updateDateTime, 60000);
 loadData();
 </script>
 </body>
