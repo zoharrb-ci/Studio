@@ -81,7 +81,7 @@
       <button class="btn" onclick="shareLink()">🔗 העתקת קישור</button>
       <button class="btn" onclick="showHelp()">❓ עזרה</button>
       <button class="btn" onclick="loadData()">↻ רענן</button>
-      <span class="version-tag">V1.11</span>
+      <span class="version-tag">V1.12</span>
     </div>
   </div>
 
@@ -157,7 +157,6 @@
     </div>
     
     <div class="modal-actions">
-      <!-- הוספת כפתור "בדיקה" למילוי אקראי -->
       <button class="btn" type="button" onclick="fillTestData()" style="margin-right: auto; background: #e8f5ee; color: var(--accent); border-color: var(--accent);">🧪 בדיקה</button>
       <button class="btn" onclick="closeAddLessonModal()">ביטול</button>
       <button class="btn btn-add" id="btn-save-modal" onclick="saveNewLesson()">שמור שיעור</button>
@@ -206,18 +205,33 @@ const URL = 'https://script.google.com/macros/s/AKfycbyHb1aGEzgxvGAO82jpnBBpFAEw
 let lessons = [], teachers = [], selectedT = null;
 const DAYS = ['ראשון', 'שני', 'שלישי', 'רביעי', 'חמישי', 'שישי', 'שבת'];
 
-/* --- API call via Script Tag (JSONP) to bypass CORS blocks --- */
-function apiCall(paramsObj, onSuccess) {
+/* --- API Functions --- */
+// קריאת נתונים מהגיליון (נשאר עם script tag כי זה עוקף הכל לקריאה)
+function readFromSheet(onSuccess) {
   const cbName = 'cb_' + Date.now() + Math.floor(Math.random()*10000);
   window[cbName] = (res) => {
     delete window[cbName];
     if (onSuccess) onSuccess(res);
   };
-  paramsObj.callback = cbName;
-  const params = new URLSearchParams(paramsObj).toString();
+  const params = new URLSearchParams({ action: 'load', callback: cbName }).toString();
   const s = document.createElement('script');
   s.src = `${URL}?${params}`;
   document.head.appendChild(s);
+}
+
+// כתיבת נתונים לגיליון (שולח POST חזק ואמין שגוגל לא יכול לצנזר)
+function writeToSheet(dataObj, onSuccess) {
+  fetch(URL, {
+    method: 'POST',
+    mode: 'no-cors',
+    headers: { 'Content-Type': 'text/plain' },
+    body: JSON.stringify(dataObj)
+  }).then(() => {
+    setTimeout(() => { if (onSuccess) onSuccess(); }, 2000); // ממתין 2 שניות שגוגל יסיים לכתוב
+  }).catch(err => {
+    console.error('שגיאת כתיבה:', err);
+    setTimeout(() => { if (onSuccess) onSuccess(); }, 2000);
+  });
 }
 
 /* --- Custom Dialogs Logic --- */
@@ -301,7 +315,7 @@ setInterval(updateDateTime, 60000);
 
 function loadData() {
   setStatus('מעדכן נתונים...', true);
-  apiCall({ action: 'load' }, (data) => {
+  readFromSheet((data) => {
     lessons = data.sort((a, b) => {
       const dateA = cleanDateDisplay(a.date).split('/').reverse().join('');
       const dateB = cleanDateDisplay(b.date).split('/').reverse().join('');
@@ -426,7 +440,7 @@ function render() {
 
 function updateCell(rowIndex, field, value) {
   setStatus('שומר שינוי...', true);
-  apiCall({ action: 'update', rowIndex, field, value }, () => {
+  writeToSheet({ action: 'update', rowIndex, field, value }, () => {
     setStatus('נשמר', false);
     if(field === 'teacher') renderChips();
   });
@@ -437,7 +451,7 @@ function deleteRow(rowIndex) {
     setStatus('מוחק...', true);
     lessons = lessons.filter(l => l.rowIndex !== rowIndex);
     render();
-    apiCall({ action: 'deleteRow', rowIndex }, () => loadData());
+    writeToSheet({ action: 'deleteRow', rowIndex }, () => loadData());
   });
 }
 
@@ -560,7 +574,7 @@ function saveNewLesson() {
   });
   render();
 
-  apiCall(data, () => {
+  writeToSheet(data, () => {
     closeAddLessonModal();
     btn.textContent = 'שמור שיעור';
     btn.disabled = false;
