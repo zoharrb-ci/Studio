@@ -7,107 +7,109 @@
 <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;700&display=swap" rel="stylesheet">
 <style>
   :root { --bg: #f7f5f0; --surface: #ffffff; --border: #e5e2da; --accent: #2d6a4f; --accent-light: #e8f5ee; --danger: #ae2012; }
-  body { font-family: 'Heebo', sans-serif; background: var(--bg); padding: 2rem; direction: rtl; }
+  body { font-family: 'Heebo', sans-serif; background: var(--bg); padding: 1.5rem; }
   .page { max-width: 1200px; margin: 0 auto; }
-  .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; }
-  .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 1.5rem; }
-  .stat { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 16px; text-align: center; }
-  .stat-value { font-size: 24px; font-weight: bold; color: var(--accent); }
   
-  .teachers-bar { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 12px; margin-bottom: 1.5rem; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
-  .chip { background: #eee; padding: 4px 12px; border-radius: 20px; font-size: 13px; cursor: pointer; border: 1.5px solid transparent; }
-  .chip.active { border-color: var(--accent); background: var(--accent-light); }
+  /* Top Bar */
+  .top-info { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; }
+  .status-indicator { font-size: 13px; padding: 4px 12px; border-radius: 20px; background: #fff; border: 1px solid var(--border); }
+  .status-indicator.syncing { color: #92400e; background: #fef3c7; }
+  .status-indicator.ready { color: var(--accent); background: var(--accent-light); }
 
-  .table-wrap { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; overflow-x: auto; }
-  table { width: 100%; border-collapse: collapse; }
-  th { background: #f0ede6; padding: 12px; font-size: 12px; text-align: right; }
-  td { padding: 8px 12px; border-bottom: 1px solid #f0ede6; }
+  .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; }
   
-  input, select { width: 100%; padding: 6px; border: 1px solid var(--border); border-radius: 6px; font-family: 'Heebo'; }
-  .btn { padding: 8px 16px; border-radius: 8px; cursor: pointer; border: 1px solid var(--border); font-family: 'Heebo'; }
-  .btn-primary { background: var(--accent); color: white; border: none; }
-  .btn-danger { color: var(--danger); background: #fff5f5; border: 1px solid #f8d7da; }
+  .table-wrap { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; margin: 1rem 0; }
+  table { width: 100%; border-collapse: collapse; }
+  th { background: #f0ede6; padding: 12px; font-size: 12px; text-align: right; border-bottom: 1px solid var(--border); }
+  td { padding: 8px 10px; border-bottom: 1px solid #f0ede6; }
+
+  .btn { padding: 8px 16px; border-radius: 8px; cursor: pointer; border: 1px solid var(--border); font-family: 'Heebo'; font-size: 13px; }
+  .btn-add { background: var(--accent); color: white; border: none; font-weight: bold; }
+  .btn-help { background: #1a1a18; color: white; border: none; }
+  .btn-danger { color: var(--danger); background: #fff5f5; border: 1px solid #f8d7da; padding: 4px 8px; }
+  
+  input, select { width: 100%; padding: 6px; border: 1px solid var(--border); border-radius: 6px; font-family: 'Heebo'; font-size: 13px; }
+  .day-label { font-weight: bold; color: var(--accent); }
 </style>
 </head>
 <body>
 
 <div class="page">
-  <div class="header">
-    <h1>ניהול שיבוץ מורים — יוגה</h1>
-    <div>
-      <button class="btn btn-primary" onclick="addRow()">+ הוסף שיעור חדש</button>
+  <div class="top-info">
+    <div id="status" class="status-indicator ready">מחובר לגיליון ✓</div>
+    <div style="display:flex; gap:8px;">
+      <button class="btn btn-help" onclick="alert('עזרה טכנית (זוהר):\n052-26567815')">❓ עזרה</button>
       <button class="btn" onclick="loadData()">↻ רענן</button>
     </div>
   </div>
 
-  <div class="stats">
-    <div class="stat"><div>סה״כ שיעורים</div><div class="stat-value" id="s-total">0</div></div>
-    <div class="stat"><div>משובצים</div><div class="stat-value" id="s-assigned">0</div></div>
-    <div class="stat"><div>ממתינים</div><div class="stat-value" id="s-pending">0</div></div>
-  </div>
-
-  <div class="teachers-bar">
-    <span>מורים:</span>
-    <div id="chips" style="display:flex; gap:6px;"></div>
-    <button class="btn" style="padding:4px 8px; font-size:12px;" onclick="addTeacher()">+ הוסף מורה</button>
+  <div class="header">
+    <h1>ניהול מערכת שעות</h1>
+    <button class="btn btn-add" onclick="addRow()">+ הוסף שיעור חדש</button>
   </div>
 
   <div class="table-wrap">
     <table>
       <thead>
         <tr>
-          <th>תאריך (DD/MM)</th><th>יום</th><th>שעה</th><th>סוג שיעור</th><th>מיקום</th><th>מורה</th><th>פעולות</th>
+          <th style="width:12%">תאריך (DD/MM)</th>
+          <th style="width:12%">יום בשבוע</th>
+          <th style="width:12%">שעה</th>
+          <th style="width:20%">סוג שיעור</th>
+          <th style="width:10%">מיקום</th>
+          <th style="width:20%">מורה</th>
+          <th style="width:10%">פעולות</th>
         </tr>
       </thead>
       <tbody id="tbody"></tbody>
     </table>
   </div>
+
+  <div style="display: flex; justify-content: center; padding: 1rem;">
+    <button class="btn btn-add" onclick="addRow()">+ הוסף שיעור נוסף בתחתית</button>
+  </div>
 </div>
 
 <script>
 const URL = 'https://script.google.com/macros/s/AKfycbzNS2b2YtYUYed_-3G6QhQudUAjkfle7FecV04vEMQ-p9o7LEEs-Z0qz8_sTJZ1ofL5-g/exec';
-let lessons = [], teachers = [], selectedT = null;
+let lessons = [], teachers = [];
 const DAYS = ['יום ראשון', 'יום שני', 'יום שלישי', 'יום רביעי', 'יום חמישי', 'יום שישי', 'יום שבת'];
 
+function setStatus(text, type) {
+  const s = document.getElementById('status');
+  s.textContent = text;
+  s.className = 'status-indicator ' + (type || 'ready');
+}
+
 function loadData() {
+  setStatus('מעדכן נתונים...', 'syncing');
   const cb = 'cb_' + Date.now();
   window[cb] = (data) => {
     delete window[cb];
     lessons = data;
-    // איסוף מורים מהנתונים
     teachers = [...new Set(lessons.map(l => l.teacher).filter(Boolean))];
     render();
-    renderChips();
+    setStatus('מעודכן ✓', 'ready');
   };
   const s = document.createElement('script');
   s.src = `${URL}?callback=${cb}&t=${Date.now()}`;
   document.head.appendChild(s);
 }
 
-function getDayFromDate(dateStr) {
-  if (!dateStr || !dateStr.includes('/')) return '';
-  const [day, month] = dateStr.split('/');
-  const year = new Date().getFullYear();
-  const date = new Date(year, month - 1, day);
-  return DAYS[date.getDay()] || '';
-}
-
 function render() {
   const tbody = document.getElementById('tbody');
   tbody.innerHTML = '';
-  const filtered = lessons.filter(l => !selectedT || l.teacher === selectedT);
-
-  filtered.forEach(l => {
+  lessons.forEach(l => {
     const tr = document.createElement('tr');
     tr.innerHTML = `
-      <td><input type="text" value="${l.date || ''}" placeholder="01/04" onchange="autoFillDay(${l.rowIndex}, this.value)"></td>
-      <td><input type="text" value="${l.day || ''}" readonly style="background:#f9f9f9"></td>
+      <td><input type="text" value="${l.date || ''}" placeholder="DD/MM" onchange="autoFillDay(${l.rowIndex}, this.value)"></td>
+      <td class="day-label">${l.day || ''}</td>
       <td><input type="text" value="${l.time || ''}" onchange="updateCell(${l.rowIndex}, 'time', this.value)"></td>
       <td><input type="text" value="${l.type || ''}" onchange="updateCell(${l.rowIndex}, 'type', this.value)"></td>
       <td><input type="text" value="${l.loc || ''}" onchange="updateCell(${l.rowIndex}, 'loc', this.value)"></td>
       <td>
         <select onchange="updateCell(${l.rowIndex}, 'teacher', this.value)">
-          <option value="">בחר מורה...</option>
+          <option value="">בחר...</option>
           ${teachers.map(t => `<option value="${t}" ${l.teacher === t ? 'selected' : ''}>${t}</option>`).join('')}
         </select>
       </td>
@@ -115,57 +117,36 @@ function render() {
     `;
     tbody.appendChild(tr);
   });
-
-  document.getElementById('s-total').textContent = lessons.length;
-  document.getElementById('s-assigned').textContent = lessons.filter(l => l.teacher).length;
-  document.getElementById('s-pending').textContent = lessons.length - lessons.filter(l => l.teacher).length;
 }
 
 function autoFillDay(rowIndex, dateVal) {
-  const day = getDayFromDate(dateVal);
+  if (!dateVal.includes('/')) return;
+  const [d, m] = dateVal.split('/');
+  const dateObj = new Date(new Date().getFullYear(), m - 1, d);
+  const dayName = DAYS[dateObj.getDay()];
+  
   updateCell(rowIndex, 'date', dateVal);
-  if (day) updateCell(rowIndex, 'day', day);
-  loadData(); // רענון לתצוגה מעודכנת
+  if (dayName) updateCell(rowIndex, 'day', dayName);
+  setTimeout(loadData, 1000); 
 }
 
 async function updateCell(rowIndex, field, value) {
+  setStatus('שומר שינויים...', 'syncing');
   await fetch(URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ action: 'update', rowIndex, field, value }) });
+  setStatus('כל השינויים נשמרו', 'ready');
 }
 
-function addRow() {
-  const newIdx = lessons.length > 0 ? Math.max(...lessons.map(l => l.rowIndex)) + 1 : 2;
-  lessons.push({ rowIndex: newIdx, date: '', day: '', time: '', type: '', loc: '', teacher: '' });
-  render();
-  fetch(URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ action: 'addRow' }) });
+async function addRow() {
+  setStatus('מוסיף שורה לגיליון...', 'syncing');
+  await fetch(URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ action: 'addRow' }) });
+  setTimeout(loadData, 1500); 
 }
 
-function deleteRow(rowIndex) {
-  if (confirm('למחוק?')) {
-    lessons = lessons.filter(l => l.rowIndex !== rowIndex);
-    render();
-    fetch(URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ action: 'deleteRow', rowIndex }) });
-  }
-}
-
-function addTeacher() {
-  const name = prompt('שם מורה:');
-  if (name && !teachers.includes(name)) {
-    teachers.push(name);
-    renderChips();
-    render();
-  }
-}
-
-function renderChips() {
-  const container = document.getElementById('chips');
-  container.innerHTML = '';
-  teachers.forEach(t => {
-    const chip = document.createElement('span');
-    chip.className = `chip ${selectedT === t ? 'active' : ''}`;
-    chip.textContent = t;
-    chip.onclick = () => { selectedT = (selectedT === t) ? null : t; render(); renderChips(); };
-    container.appendChild(chip);
-  });
+async function deleteRow(rowIndex) {
+  if (!confirm('למחוק שיעור זה?')) return;
+  setStatus('מוחק...', 'syncing');
+  await fetch(URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ action: 'deleteRow', rowIndex }) });
+  loadData();
 }
 
 loadData();
