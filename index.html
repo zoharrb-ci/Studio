@@ -92,7 +92,6 @@
   <div class="teachers-bar">
     <span style="font-size:13px; color:var(--muted); font-weight: 500;">מורות פעילות:</span>
     <div id="chips" style="display:flex; gap:6px; flex-wrap:wrap; flex-grow: 1;"></div>
-    <button class="btn" style="padding:6px 12px; font-size:12px;" onclick="addTeacher()">+ הוספת מורה</button>
   </div>
 
   <div class="header">
@@ -151,7 +150,7 @@
 
     <div class="modal-group">
       <label>מורה משובצת (אופציונלי)</label>
-      <select id="m-teacher">
+      <select id="m-teacher" onchange="handleModalTeacherChange(this)">
         <!-- יתמלא אוטומטית מקוד ה-JS -->
       </select>
     </div>
@@ -254,21 +253,61 @@ function renderChips() {
   });
 }
 
-function addTeacher() {
-  const name = prompt('שם המורה החדשה:');
-  if (name && name.trim() && !teachers.includes(name.trim())) {
-    const cleanName = name.trim();
+function registerNewTeacher(name) {
+  const cleanName = name.trim();
+  if (!teachers.includes(cleanName)) {
     teachers.push(cleanName);
     
     // שמירה בזיכרון המקומי
     try {
       const savedTeachers = JSON.parse(localStorage.getItem('customTeachers') || '[]');
-      savedTeachers.push(cleanName);
-      localStorage.setItem('customTeachers', JSON.stringify(savedTeachers));
+      if (!savedTeachers.includes(cleanName)) {
+        savedTeachers.push(cleanName);
+        localStorage.setItem('customTeachers', JSON.stringify(savedTeachers));
+      }
     } catch(e) {}
 
     renderChips();
-    render();
+  }
+  return cleanName;
+}
+
+async function handleTeacherChange(rowIndex, selectEl) {
+  const val = selectEl.value;
+  if (val === '__NEW__') {
+    const name = prompt('שם המורה החדשה:');
+    if (name && name.trim()) {
+      const cleanName = registerNewTeacher(name);
+      const lesson = lessons.find(l => l.rowIndex === rowIndex);
+      if (lesson) lesson.teacher = cleanName;
+      render(); // עדכון הטבלה כדי להציג את הבחירה
+      updateCell(rowIndex, 'teacher', cleanName);
+    } else {
+      // אם בוטל, החזר את הבחירה למורה הקודמת
+      const lesson = lessons.find(l => l.rowIndex === rowIndex);
+      selectEl.value = lesson ? lesson.teacher : '';
+    }
+  } else {
+    const lesson = lessons.find(l => l.rowIndex === rowIndex);
+    if (lesson) lesson.teacher = val;
+    updateCell(rowIndex, 'teacher', val);
+    renderChips();
+  }
+}
+
+function handleModalTeacherChange(selectEl) {
+  if (selectEl.value === '__NEW__') {
+    const name = prompt('שם המורה החדשה:');
+    if (name && name.trim()) {
+      const cleanName = registerNewTeacher(name);
+      // הוסף את האפשרות החדשה לפני האפשרות "__NEW__"
+      const newOpt = new Option(cleanName, cleanName, true, true);
+      selectEl.add(newOpt, selectEl.options[selectEl.options.length - 1]);
+      selectEl.value = cleanName;
+      render(); // עדכון רשימות הגלילה בטבלה שברקע
+    } else {
+      selectEl.value = '';
+    }
   }
 }
 
@@ -287,9 +326,10 @@ function render() {
       <td><input type="text" value="${l.type || ''}" onchange="updateCell(${l.rowIndex}, 'type', this.value)"></td>
       <td><input type="text" value="${l.loc || ''}" onchange="updateCell(${l.rowIndex}, 'loc', this.value)"></td>
       <td>
-        <select onchange="updateCell(${l.rowIndex}, 'teacher', this.value)">
+        <select onchange="handleTeacherChange(${l.rowIndex}, this)">
           <option value="">בחר מורה...</option>
           ${teachers.map(t => `<option value="${t}" ${l.teacher === t ? 'selected' : ''}>${t}</option>`).join('')}
+          <option value="__NEW__" style="color: var(--accent); font-weight: bold;">+ הוספת מורה חדשה...</option>
         </select>
       </td>
       <td><button class="btn-danger" onclick="deleteRow(${l.rowIndex})">מחק</button></td>
@@ -324,7 +364,7 @@ async function deleteRow(rowIndex) {
 function shareLink() {
   const url = 'https://zoharrb-ci.github.io/studio-april/';
   navigator.clipboard.writeText(url).then(() => {
-    alert('הקישור הועתק ללוח! עכשיו אפשר לשלוח אותו בוואטסאפ לתלמידות.');
+    alert('הקישור ' + url + ' הועתק ללוח! עכשיו אפשר לשלוח אותו בוואטסאפ לתלמידות.');
   }).catch(err => {
     alert('שגיאה בהעתקת הקישור. ניתן להעתיק ידנית: ' + url);
   });
@@ -340,7 +380,9 @@ function openModal() {
   document.getElementById('err-time').style.display = 'none';
   
   const select = document.getElementById('m-teacher');
-  select.innerHTML = '<option value="">בחר מורה...</option>' + teachers.map(t => `<option value="${t}">${t}</option>`).join('');
+  select.innerHTML = '<option value="">בחר מורה...</option>' + 
+                     teachers.map(t => `<option value="${t}">${t}</option>`).join('') +
+                     '<option value="__NEW__" style="color: var(--accent); font-weight: bold;">+ הוספת מורה חדשה...</option>';
   
   document.getElementById('addModal').style.display = 'flex'; 
 }
