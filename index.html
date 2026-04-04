@@ -1,81 +1,375 @@
-function doGet(e) {
-  const sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
-  const p = e.parameter;
-  const callback = p.callback || 'callback';
-
-  try {
-    // 1. טיפול בפעולות שמירה (עדכון/הוספה/מחיקה)
-    if (p.action && p.action !== 'load') {
-      if (p.action === 'update') {
-        // מיפוי עמודות לפי המבנה שסיפקת: תאריך=1, יום=2, שעה=3, מורה=4, סוג=5, מיקום=6
-        const colMap = { 'date': 1, 'day': 2, 'time': 3, 'teacher': 4, 'type': 5, 'loc': 6 };
-        const col = colMap[p.field];
-        if (col && p.rowIndex) {
-          sheet.getRange(parseInt(p.rowIndex), col).setValue(p.value);
-        }
-      }
-      else if (p.action === 'addRow') {
-        const data = sheet.getDataRange().getValues();
-        let realLastRow = data.length;
-        while (realLastRow > 0 && data[realLastRow - 1].join('').trim() === '') realLastRow--;
-        
-        // הוספת שורה חדשה (עמודה 7 היא מקסימום משתתפים ברירת מחדל 7)
-        sheet.getRange(realLastRow + 1, 1, 1, 7).setValues([[p.date || '', p.day || '', p.time || '', p.teacher || '', p.type || '', p.loc || 'סטודיו', 7]]);
-      }
-      else if (p.action === 'deleteRow') {
-        if (p.rowIndex) sheet.deleteRow(parseInt(p.rowIndex));
-      }
-
-      // --- ביצוע מיון אוטומטי לאחר כל שינוי ---
-      // ממיין משורה 2 (כדי לדלג על הכותרות) עד השורה האחרונה
-      const lastRow = sheet.getLastRow();
-      const lastCol = sheet.getLastColumn();
-      if (lastRow > 1) {
-        const rangeToSort = sheet.getRange(2, 1, lastRow - 1, lastCol);
-        rangeToSort.sort([
-          {column: 1, ascending: true}, // מיון ראשון לפי תאריך
-          {column: 3, ascending: true}  // מיון שני לפי שעה
-        ]);
-      }
-
-      // שמירה פיזית מיידית
-      SpreadsheetApp.flush();
-      return ContentService.createTextOutput(callback + '(' + JSON.stringify({success: true}) + ')').setMimeType(ContentService.MimeType.JAVASCRIPT);
-    }
-
-    // 2. פעולת קריאה (load)
-    const fullData = sheet.getDataRange().getValues();
-    const result = fullData.slice(1).map((r, i) => ({
-      rowIndex: i + 2,
-      date: formatDate(r[0]),
-      day: String(r[1] || ''),
-      time: String(r[2] || '').trim(),
-      teacher: r[3] ? String(r[3]).trim() : '',
-      type: String(r[4] || '').trim(),
-      loc: r[5] ? String(r[5]).trim() : '',
-      max: Number(r[6]) || 7
-    })).filter(r => r.date || r.type || r.teacher);
-
-    return ContentService.createTextOutput(callback + '(' + JSON.stringify(result) + ')').setMimeType(ContentService.MimeType.JAVASCRIPT);
-
-  } catch (err) {
-    return ContentService.createTextOutput(callback + '(' + JSON.stringify({success: false, error: err.toString()}) + ')').setMimeType(ContentService.MimeType.JAVASCRIPT);
-  }
-}
-
-function doPost(e) { return doGet(e); }
-
-function formatDate(val) {
-  if (!val) return '';
-  if (val instanceof Date) {
-    return ('0' + val.getDate()).slice(-2) + '/' + ('0' + (val.getMonth() + 1)).slice(-2);
-  }
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>מערכת שעות סטודיו קשובה</title>
+<link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root { --bg: #f7f5f0; --surface: #ffffff; --border: #e5e2da; --accent: #2d6a4f; --accent-light: #e8f5ee; --danger: #ae2012; }
+  body { font-family: 'Heebo', sans-serif; background: var(--bg); padding: 1.5rem; margin: 0; }
+  .page { max-width: 1200px; margin: 0 auto; }
   
-  const str = String(val).trim();
-  // אם זה פורמט DD/MM/YYYY או דומה, נחלץ רק DD/MM
-  const match = str.match(/(\d{1,2})[\/\-\.](\d{1,2})/);
-  if (match) {
-    return ('0' + match[1]).slice(-2) + '/' + ('0' + match[2]).slice(-2);
+  .top-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; }
+  .status-indicator { font-size: 13px; padding: 6px 14px; border-radius: 20px; border: 1px solid var(--border); background: white; }
+  .status-indicator.syncing { color: #92400e; background: #fef3c7; }
+  .version-tag { font-size: 12px; color: #888; font-family: monospace; font-weight: 500; direction: ltr; display: inline-block; margin-right: 8px; }
+  
+  .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 1rem; }
+  .stat { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 16px; text-align: center; box-shadow: 0 2px 4px rgba(0,0,0,0.02); }
+  .stat-label { font-size: 13px; color: #666; margin-bottom: 4px; }
+  .stat-val { font-size: 26px; font-weight: 700; color: var(--accent); }
+
+  .teachers-bar { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 12px 16px; margin-bottom: 1.5rem; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; box-shadow: 0 2px 4px rgba(0,0,0,0.02); }
+  .chip { display: inline-flex; align-items: center; gap: 6px; padding: 5px 12px; border-radius: 20px; font-size: 13px; background: #eee; cursor: pointer; border: 1.5px solid transparent; }
+  .chip.active { border-color: var(--accent); background: var(--accent-light); }
+  .chip-count { font-size: 11px; opacity: 0.65; }
+
+  .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; }
+  
+  .table-wrap { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.03); }
+  table { width: 100%; border-collapse: collapse; table-layout: fixed; }
+  th { background: #f0ede6; padding: 14px; font-size: 13px; text-align: right; border-bottom: 2px solid var(--border); }
+  td { padding: 10px; border-bottom: 1px solid #f0ede6; vertical-align: middle; }
+
+  .btn { padding: 9px 18px; border-radius: 8px; cursor: pointer; border: 1px solid var(--border); font-family: 'Heebo'; font-size: 14px; font-weight: 500; transition: 0.2s; background: white; }
+  .btn:hover { background: #f0ede6; }
+  .btn-add { background: var(--accent); color: white; border: none; }
+  .btn-add:hover { background: #23523d; }
+  .btn-danger { color: var(--danger); background: #fff5f5; border: 1px solid #f8d7da; padding: 6px 10px; font-size: 12px; }
+  
+  input, select { width: 100%; padding: 8px; border: 1px solid var(--border); border-radius: 6px; font-family: 'Heebo'; font-size: 14px; background: #fcfcfb; box-sizing: border-box; }
+  input:focus, select:focus { outline: none; border-color: var(--accent); background: white; }
+  .day-col { font-weight: 700; color: var(--accent); font-size: 14px; }
+
+  .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center; }
+  .modal-content { background: white; padding: 25px; border-radius: 15px; width: 400px; max-width: 90%; box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
+  .modal-content h3 { margin-top: 0; color: var(--accent); margin-bottom: 20px; }
+  .modal-group { margin-bottom: 15px; }
+  .modal-group label { display: block; margin-bottom: 5px; font-size: 13px; font-weight: 500; }
+  .modal-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 25px; }
+  .error-msg { color: var(--danger); font-size: 12px; margin-top: 4px; display: none; }
+
+  .main-title {
+    background: #d8f3dc;
+    color: var(--accent);
+    text-align: center;
+    padding: 18px;
+    border-radius: 12px;
+    margin-top: 0;
+    margin-bottom: 20px;
+    font-size: 28px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.05);
   }
-  return str;
+</style>
+</head>
+<body>
+
+<div class="page">
+  <h1 class="main-title">מערכת שעות סטודיו קשובה</h1>
+
+  <div class="top-bar">
+    <div id="status" class="status-indicator">מתחבר לגיליון...</div>
+    <div style="display:flex; gap:10px; flex-wrap: wrap; align-items: center;">
+      <button class="btn" onclick="window.open('https://zoharrb-ci.github.io/studio-april/', '_blank')">👁️ תצוגת תלמידות</button>
+      <button class="btn" onclick="shareLink()">🔗 העתקת קישור</button>
+      <button class="btn" onclick="showHelp()">❓ עזרה</button>
+      <button class="btn" onclick="loadData()">↻ רענן</button>
+      <span class="version-tag">V1.18</span>
+    </div>
+  </div>
+
+  <div class="stats">
+    <div class="stat"><div class="stat-label">סה״כ שיעורים</div><div id="s-total" class="stat-val">0</div></div>
+    <div class="stat"><div class="stat-label">שיעורים משובצים</div><div id="s-done" class="stat-val">0</div></div>
+    <div class="stat"><div class="stat-label">ממתינים לשיבוץ</div><div id="s-wait" class="stat-val" style="color:#92400e">0</div></div>
+  </div>
+
+  <div class="teachers-bar">
+    <span style="font-size:13px; color:#666; font-weight: 500;">מורות פעילות:</span>
+    <div id="chips" style="display:flex; gap:6px; flex-wrap:wrap; flex-grow: 1;"></div>
+  </div>
+
+  <div class="header">
+    <div id="current-datetime" style="flex-grow: 1; font-size: 15px; font-weight: 500; color: #666;">טוען...</div>
+    <button class="btn btn-add" onclick="openAddLessonModal()">+ הוספת שיעור</button>
+  </div>
+
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th style="width:12%">תאריך</th>
+          <th style="width:10%">יום</th>
+          <th style="width:14%">שעה</th>
+          <th style="width:20%">סוג שיעור</th>
+          <th style="width:12%">מיקום</th>
+          <th style="width:22%">מורה</th>
+          <th style="width:10%">פעולות</th>
+        </tr>
+      </thead>
+      <tbody id="tbody"></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ================= Modals ================= -->
+<div id="addModal" class="modal">
+  <div class="modal-content">
+    <h3>הוספת שיעור חדש</h3>
+    <div class="modal-group">
+      <label>תאריך (DD/MM)</label>
+      <input type="text" id="m-date" placeholder="למשל 05/04" onchange="validateAndUpdateDay()">
+      <div id="err-date" class="error-msg">פורמט תקין: DD/MM</div>
+    </div>
+    <div class="modal-group">
+      <label>יום בשבוע</label>
+      <input type="text" id="m-day" readonly style="background:#f0f0f0;">
+    </div>
+    <div class="modal-group">
+      <label>שעה (HH:MM-HH:MM)</label>
+      <input type="text" id="m-time" placeholder="08:30-09:45">
+    </div>
+    <div class="modal-group">
+      <label>סוג שיעור</label>
+      <input type="text" id="m-type">
+    </div>
+    <div class="modal-group">
+      <label>מורה</label>
+      <select id="m-teacher"></select>
+    </div>
+    <div class="modal-actions">
+      <button class="btn" onclick="closeAddLessonModal()">ביטול</button>
+      <button class="btn btn-add" onclick="saveNewLesson()">שמור</button>
+    </div>
+  </div>
+</div>
+
+<div id="alertModal" class="modal" style="z-index: 2000;"><div class="modal-content" style="width: 320px;"><h3 id="alert-title"></h3><p id="alert-message"></p><div class="modal-actions"><button class="btn btn-add" onclick="document.getElementById('alertModal').style.display='none'">סגור</button></div></div></div>
+<div id="confirmModal" class="modal" style="z-index: 2000;"><div class="modal-content" style="width: 320px;"><h3>אישור</h3><p>למחוק שיעור זה?</p><div class="modal-actions"><button class="btn" onclick="closeConfirm()">ביטול</button><button class="btn" style="background: var(--danger); color: white;" onclick="submitConfirm()">מחק</button></div></div></div>
+<div id="promptModal" class="modal" style="z-index: 2000;"><div class="modal-content" style="width: 320px;"><h3>מורה חדשה</h3><input type="text" id="prompt-input"><div class="modal-actions"><button class="btn" onclick="closePrompt()">ביטול</button><button class="btn btn-add" onclick="submitPrompt()">אישור</button></div></div></div>
+
+<script>
+const URL = 'https://script.google.com/macros/s/AKfycbzNwaMU3w4nikoXaQpUX2KH_WdbsLosnV3y05V_QLIC9B57VEZPhsREMOa0ULnFWyU-Dw/exec';
+let lessons = [], teachers = [], selectedT = null;
+const DAYS = ['ראשון', 'שני', 'שלישי', 'רביעי', 'חמישי', 'שישי', 'שבת'];
+
+function apiCall(paramsObj, onSuccess) {
+  const cbName = 'cb_' + Date.now() + Math.floor(Math.random()*1000);
+  window[cbName] = (res) => { delete window[cbName]; if (onSuccess) onSuccess(res); };
+  paramsObj.callback = cbName;
+  const s = document.createElement('script');
+  s.src = `${URL}?${new URLSearchParams(paramsObj).toString()}`;
+  document.head.appendChild(s);
 }
+
+function showAlert(msg, title = 'הודעה') {
+  document.getElementById('alert-title').textContent = title;
+  document.getElementById('alert-message').textContent = msg;
+  document.getElementById('alertModal').style.display = 'flex';
+}
+
+let confirmCallback = null;
+function showConfirm(callback) { confirmCallback = callback; document.getElementById('confirmModal').style.display = 'flex'; }
+function closeConfirm() { document.getElementById('confirmModal').style.display = 'none'; }
+function submitConfirm() { closeConfirm(); if (confirmCallback) confirmCallback(); }
+
+let promptCallback = null;
+function showPrompt(callback) {
+  promptCallback = callback;
+  document.getElementById('prompt-input').value = '';
+  document.getElementById('promptModal').style.display = 'flex';
+}
+function closePrompt() { document.getElementById('promptModal').style.display = 'none'; }
+function submitPrompt() {
+  const val = document.getElementById('prompt-input').value.trim();
+  closePrompt(); if (promptCallback) promptCallback(val);
+}
+
+function setStatus(text, isSyncing) {
+  const s = document.getElementById('status');
+  s.textContent = text;
+  s.className = 'status-indicator ' + (isSyncing ? 'syncing' : '');
+}
+
+function cleanDateDisplay(val) {
+  if (!val) return '';
+  let str = String(val).trim();
+  const dateMatch = str.match(/(\d{1,2})[\/\-\.](\d{1,2})/);
+  if (dateMatch) return ('0' + dateMatch[1]).slice(-2) + '/' + ('0' + dateMatch[2]).slice(-2);
+  if (str.includes('GMT') || str.match(/^\d{4}-\d{2}-\d{2}/)) {
+    const d = new Date(str);
+    if (!isNaN(d.getTime())) return ('0' + d.getDate()).slice(-2) + '/' + ('0' + (d.getMonth() + 1)).slice(-2);
+  }
+  const now = new Date();
+  return ('0' + now.getDate()).slice(-2) + '/' + ('0' + (now.getMonth() + 1)).slice(-2);
+}
+
+function cleanDayDisplay(val) {
+   if(!val) return '';
+   const str = String(val);
+   if (str.includes('GMT') || str.match(/^\d{4}-\d{2}-\d{2}/)) {
+     const d = new Date(str);
+     if (!isNaN(d.getTime())) return DAYS[d.getDay()];
+   }
+   const lower = str.toLowerCase();
+   if (lower.includes('sun')) return 'ראשון';
+   if (lower.includes('mon')) return 'שני';
+   if (lower.includes('tue')) return 'שלישי';
+   if (lower.includes('wed')) return 'רביעי';
+   if (lower.includes('thu')) return 'חמישי';
+   if (lower.includes('fri')) return 'שישי';
+   if (lower.includes('sat')) return 'שבת';
+   return str.replace('יום ', '').trim();
+}
+
+function updateDateTime() {
+  const now = new Date();
+  const dateStr = ('0' + now.getDate()).slice(-2) + '/' + ('0' + (now.getMonth() + 1)).slice(-2);
+  const timeStr = ('0' + now.getHours()).slice(-2) + ':' + ('0' + now.getMinutes()).slice(-2);
+  document.getElementById('current-datetime').textContent = `יום ${DAYS[now.getDay()]}, ${dateStr} | ${timeStr}`;
+}
+
+function loadData() {
+  setStatus('מעדכן...', true);
+  apiCall({ action: 'load' }, (data) => {
+    // מיון מקומי לתצוגה ראשונית
+    lessons = data.sort((a, b) => {
+      const d1 = cleanDateDisplay(a.date).split('/').reverse().join('');
+      const d2 = cleanDateDisplay(b.date).split('/').reverse().join('');
+      return d1.localeCompare(d2) || (a.time || '').localeCompare(b.time || '');
+    });
+    teachers = [...new Set(lessons.map(l => l.teacher).filter(Boolean))];
+    render();
+    renderChips();
+    setStatus('מחובר ✓', false);
+  });
+}
+
+function renderChips() {
+  const container = document.getElementById('chips');
+  container.innerHTML = '';
+  teachers.forEach(t => {
+    const chip = document.createElement('span');
+    chip.className = `chip ${selectedT === t ? 'active' : ''}`;
+    chip.innerHTML = `${t} <span class="chip-count">(${lessons.filter(l => l.teacher === t).length})</span>`;
+    chip.onclick = () => { selectedT = (selectedT === t) ? null : t; render(); renderChips(); };
+    container.appendChild(chip);
+  });
+}
+
+function render() {
+  const tbody = document.getElementById('tbody');
+  tbody.innerHTML = '';
+  const filtered = lessons.filter(l => !selectedT || l.teacher === selectedT);
+
+  filtered.forEach(l => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td><div style="font-weight: bold; color: var(--accent);">${cleanDateDisplay(l.date)}</div></td>
+      <td class="day-col">${cleanDayDisplay(l.day)}</td>
+      <td><input type="text" value="${l.time || ''}" onchange="updateAndRefresh(${l.rowIndex}, 'time', this.value)"></td>
+      <td><input type="text" value="${l.type || ''}" onchange="updateCell(${l.rowIndex}, 'type', this.value)"></td>
+      <td><input type="text" value="${l.loc || ''}" onchange="updateCell(${l.rowIndex}, 'loc', this.value)"></td>
+      <td>
+        <select onchange="handleTeacherChange(${l.rowIndex}, this)">
+          <option value="">בחר מורה...</option>
+          ${teachers.map(t => `<option value="${t}" ${l.teacher === t ? 'selected' : ''}>${t}</option>`).join('')}
+          <option value="__NEW__">+ מורה חדשה...</option>
+        </select>
+      </td>
+      <td><button class="btn-danger" onclick="deleteRow(${l.rowIndex})">מחק</button></td>
+    `;
+    tbody.appendChild(tr);
+  });
+  document.getElementById('s-total').textContent = lessons.length;
+  document.getElementById('s-done').textContent = lessons.filter(l => l.teacher).length;
+  document.getElementById('s-wait').textContent = lessons.length - lessons.filter(l => l.teacher).length;
+}
+
+// פונקציית עדכון שמרעננת את כל הנתונים (שימושי למיון)
+function updateAndRefresh(rowIndex, field, value) {
+  setStatus('שומר וממיין...', true);
+  apiCall({ action: 'update', rowIndex, field, value }, () => loadData());
+}
+
+function updateCell(rowIndex, field, value) {
+  setStatus('שומר...', true);
+  apiCall({ action: 'update', rowIndex, field, value }, () => setStatus('נשמר', false));
+}
+
+function deleteRow(rowIndex) {
+  showConfirm(() => {
+    setStatus('מוחק...', true);
+    apiCall({ action: 'deleteRow', rowIndex }, () => loadData());
+  });
+}
+
+function handleTeacherChange(rowIndex, selectEl) {
+  if (selectEl.value === '__NEW__') {
+    showPrompt(name => {
+      if (name) {
+        if (!teachers.includes(name)) teachers.push(name);
+        updateCell(rowIndex, 'teacher', name);
+        loadData();
+      } else { selectEl.value = ''; }
+    });
+  } else {
+    updateCell(rowIndex, 'teacher', selectEl.value);
+  }
+}
+
+function openAddLessonModal() {
+  document.getElementById('m-date').value = '';
+  document.getElementById('m-day').value = '';
+  document.getElementById('m-teacher').innerHTML = '<option value="">בחר...</option>' + teachers.map(t => `<option value="${t}">${t}</option>`).join('') + '<option value="__NEW__">+ חדשה...</option>';
+  document.getElementById('addModal').style.display = 'flex';
+}
+
+function closeAddLessonModal() { document.getElementById('addModal').style.display = 'none'; }
+
+function validateAndUpdateDay() {
+  const val = document.getElementById('m-date').value;
+  const match = val.match(/^(\d{1,2})\/(\d{1,2})$/);
+  if (!match) return false;
+  const d = new Date(2026, parseInt(match[2])-1, parseInt(match[1]));
+  document.getElementById('m-day').value = DAYS[d.getDay()];
+  return true;
+}
+
+function saveNewLesson() {
+  if (!validateAndUpdateDay()) {
+     document.getElementById('err-date').style.display = 'block';
+     return;
+  }
+  document.getElementById('err-date').style.display = 'none';
+  const data = {
+    action: 'addRow',
+    date: document.getElementById('m-date').value,
+    day: document.getElementById('m-day').value,
+    time: document.getElementById('m-time').value,
+    type: document.getElementById('m-type').value,
+    teacher: document.getElementById('m-teacher').value
+  };
+  setStatus('מוסיף...', true);
+  apiCall(data, () => { closeAddLessonModal(); loadData(); });
+}
+
+function shareLink() {
+  const dummy = document.createElement("input");
+  document.body.appendChild(dummy);
+  dummy.value = 'https://zoharrb-ci.github.io/studio-april/';
+  dummy.select();
+  document.execCommand("copy");
+  document.body.removeChild(dummy);
+  showAlert('הקישור הועתק!');
+}
+
+function showHelp() { showAlert('תמיכה טכנית: 052-6567815'); }
+
+updateDateTime();
+setInterval(updateDateTime, 60000);
+loadData();
+</script>
+</body>
+</html>
