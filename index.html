@@ -56,7 +56,7 @@
 
   /* Main Title */
   .main-title {
-    background: #d8f3dc; /* צבע פסטל בולט תואם */
+    background: #d8f3dc;
     color: var(--accent);
     text-align: center;
     padding: 18px;
@@ -97,7 +97,7 @@
 
   <div class="header">
     <div id="current-datetime" style="flex-grow: 1; font-size: 15px; font-weight: 500; color: var(--muted);">טוען תאריך ושעה...</div>
-    <button class="btn btn-add" onclick="openModal()">+ הוסף שיעור</button>
+    <button class="btn btn-add" onclick="openModal()">+ הוספת שיעור</button>
   </div>
 
   <div class="table-wrap">
@@ -118,7 +118,7 @@
   </div>
 
   <div style="display:flex; justify-content:center; padding:20px;">
-    <button class="btn btn-add" onclick="openModal()">+ הוסף שיעור בתחתית</button>
+    <button class="btn btn-add" onclick="openModal()">+ הוספת שיעור</button>
   </div>
 </div>
 
@@ -177,9 +177,7 @@ function setStatus(text, isSyncing) {
 function cleanDateDisplay(val) {
   if (!val) return '';
   const strVal = String(val);
-  // מזהה פורמט תאריך ארוך של גוגל
   if (strVal.includes('GMT') || strVal.includes('שעון') || strVal.match(/^\d{4}-\d{2}-\d{2}T/)) {
-    // מסיר את סוגריים עם אזור הזמן בעברית כדי למנוע שגיאות המרה
     const cleanStr = strVal.replace(/\(.*\)/, '').trim();
     const d = new Date(cleanStr);
     if (!isNaN(d.getTime())) {
@@ -192,7 +190,6 @@ function cleanDateDisplay(val) {
 function cleanDayDisplay(val) {
    if(!val) return '';
    const strVal = String(val);
-   // מזהה פורמט תאריך ארוך של גוגל (אם זה גלש לעמודת היום)
    if (strVal.includes('GMT') || strVal.includes('שעון') || strVal.match(/^\d{4}-\d{2}-\d{2}T/)) {
      const cleanStr = strVal.replace(/\(.*\)/, '').trim();
      const d = new Date(cleanStr);
@@ -209,7 +206,6 @@ function updateDateTime() {
   document.getElementById('current-datetime').textContent = `יום ${dayName}, ${dateStr} | ${timeStr}`;
 }
 
-// הפעלה ראשונית ועדכון כל דקה
 updateDateTime();
 setInterval(updateDateTime, 60000);
 
@@ -225,7 +221,17 @@ function loadData() {
       return dateA.localeCompare(dateB) || (a.time || '').localeCompare(b.time || '');
     });
     
+    // משיכת מורות מתוך הגיליון
     teachers = [...new Set(lessons.map(l => l.teacher).filter(Boolean))];
+    
+    // הוספת המורות שנשמרו בזיכרון הדפדפן כדי שלא ייעלמו
+    try {
+      const savedTeachers = JSON.parse(localStorage.getItem('customTeachers') || '[]');
+      savedTeachers.forEach(t => {
+        if (!teachers.includes(t)) teachers.push(t);
+      });
+    } catch(e) {}
+
     render();
     renderChips();
     setStatus('מחובר ומעודכן ✓', false);
@@ -251,7 +257,16 @@ function renderChips() {
 function addTeacher() {
   const name = prompt('שם המורה החדשה:');
   if (name && name.trim() && !teachers.includes(name.trim())) {
-    teachers.push(name.trim());
+    const cleanName = name.trim();
+    teachers.push(cleanName);
+    
+    // שמירה בזיכרון המקומי
+    try {
+      const savedTeachers = JSON.parse(localStorage.getItem('customTeachers') || '[]');
+      savedTeachers.push(cleanName);
+      localStorage.setItem('customTeachers', JSON.stringify(savedTeachers));
+    } catch(e) {}
+
     renderChips();
     render();
   }
@@ -297,6 +312,11 @@ async function updateCell(rowIndex, field, value) {
 async function deleteRow(rowIndex) {
   if (!confirm('למחוק שיעור זה לצמיתות?')) return;
   setStatus('מוחק...', true);
+  
+  // מחיקה מיידית מהתצוגה
+  lessons = lessons.filter(l => l.rowIndex !== rowIndex);
+  render();
+  
   await fetch(URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ action: 'deleteRow', rowIndex }) });
   loadData();
 }
@@ -381,13 +401,28 @@ async function saveNewLesson() {
   };
   
   setStatus('יוצר שיעור חדש...', true);
+  
+  // תצוגה מיידית למניעת היעלמות (עד שגוגל יסיים לשמור)
+  lessons.push({
+    rowIndex: Date.now(), // מספר מזהה זמני
+    ...data
+  });
+  
+  lessons.sort((a, b) => {
+    const dateA = cleanDateDisplay(a.date).split('/').reverse().join('');
+    const dateB = cleanDateDisplay(b.date).split('/').reverse().join('');
+    return dateA.localeCompare(dateB) || (a.time || '').localeCompare(b.time || '');
+  });
+  render();
+
   await fetch(URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify(data) });
   
   closeModal();
   btn.textContent = 'שמור שיעור';
   btn.disabled = false;
   
-  setTimeout(loadData, 1000); // טעינה מחדש כדי להציג את השורה
+  // הוספנו השהייה ארוכה יותר (2.5 שניות) כדי לאפשר לגוגל לכתוב לגיליון לפני שמרעננים מחדש
+  setTimeout(loadData, 2500); 
 }
 
 loadData();
