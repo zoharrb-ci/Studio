@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>שיבוץ מורים — יוגה אפריל 2026</title>
+<title>ניהול שיבוץ מורים — יוגה אפריל 2026</title>
 <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;700&display=swap" rel="stylesheet">
 <style>
   :root {
@@ -25,7 +25,7 @@
     min-height: 100vh;
     padding: 2rem;
   }
-  .page { max-width: 1100px; margin: 0 auto; }
+  .page { max-width: 1200px; margin: 0 auto; }
 
   /* Header */
   .header {
@@ -67,7 +67,7 @@
     border-radius: 16px; overflow: hidden;
   }
   table { width: 100%; border-collapse: collapse; }
-  th { font-size: 11px; color: var(--muted); padding: 12px; text-align: right; border-bottom: 1px solid var(--border); background: #f0ede6; }
+  th { font-size: 11px; color: var(--muted); padding: 12px; text-align: right; border-bottom: 1px solid var(--border); background: #f0ede6; white-space: nowrap; }
   td { padding: 11px 12px; font-size: 13px; border-bottom: 1px solid #f0ede6; }
 
   /* New Buttons */
@@ -87,6 +87,15 @@
   
   select.assign { width: 100%; padding: 5px; border-radius: 6px; border: 1px solid var(--border); font-family: 'Heebo'; }
   select.assign.filled { background: var(--accent-light); border-color: var(--accent); font-weight: bold; }
+  
+  /* עמודות מיושרות */
+  .date-col { width: 10%; text-align: center; }
+  .day-col { width: 8%; text-align: center; font-weight: bold; }
+  .time-col { width: 12%; text-align: center; }
+  .type-col { width: 25%; }
+  .loc-col { width: 10%; }
+  .teacher-col { width: 35%; }
+
 </style>
 </head>
 <body>
@@ -94,10 +103,10 @@
   <div class="header">
     <div>
       <div class="header-title">ניהול שיבוץ מורים — יוגה</div>
-      <div class="header-sub" id="subtitle">טוען נתונים...</div>
+      <div class="header-sub" id="subtitle">אפריל 2026</div>
     </div>
     <div class="header-actions">
-      <div class="sync loading" id="sync"><span id="sync-text">מתחבר...</span></div>
+      <div class="sync loading" id="sync"><span id="sync-text">מתחבר לגיליון...</span></div>
       <button class="btn" onclick="window.open('https://zoharrb-ci.github.io/studio-april/', '_blank')">👁️ תצוגת שיעורים</button>
       <button class="btn" onclick="shareLink()">🔗 שיתוף קישור</button>
       <button class="btn" onclick="loadData()">↻ רענן</button>
@@ -120,7 +129,12 @@
     <table>
       <thead>
         <tr>
-          <th>תאריך</th><th>יום</th><th>שעה</th><th>סוג שיעור</th><th>מיקום</th><th>מורה משובץ/ת</th>
+          <th class="date-col">תאריך</th>
+          <th class="day-col">יום</th>
+          <th class="time-col">שעה</th>
+          <th class="type-col">סוג שיעור</th>
+          <th class="loc-col">מיקום</th>
+          <th class="teacher-col">מורה משובץ/ת</th>
         </tr>
       </thead>
       <tbody id="tbody"></tbody>
@@ -132,11 +146,44 @@
 const URL = 'https://script.google.com/macros/s/AKfycbzNS2b2YtYUYed_-3G6QhQudUAjkfle7FecV04vEMQ-p9o7LEEs-Z0qz8_sTJZ1ofL5-g/exec';
 let lessons = [], teachers = [], selectedT = null;
 
+const DAYS_HEBREW = ['ראשון', 'שני', 'שלישי', 'רביעי', 'חמישי', 'שישי', 'שבת'];
+
 function sync(state, text) {
   const s = document.getElementById('sync');
   s.className = 'sync ' + state;
   document.getElementById('sync-text').textContent = text;
 }
+
+// --- פונקציות פירמוט תאריכים חדשות ---
+
+// הופך אובייקט תאריך לתצוגת DD/MM
+function formatDate(dateString) {
+  if (!dateString) return '';
+  try {
+    const date = new Date(dateString);
+    if (isNaN(date.getTime())) return dateString; // אם זה לא תאריך תקין, החזר את המקור
+    
+    const day = String(date.getDate()).padStart(2, '0');
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    return `${day}/${month}`;
+  } catch (e) {
+    return dateString;
+  }
+}
+
+// מחלץ את שם היום בעברית
+function formatDay(dateString) {
+  if (!dateString) return '';
+  try {
+    const date = new Date(dateString);
+    if (isNaN(date.getTime())) return dateString;
+    return DAYS_HEBREW[date.getDay()];
+  } catch (e) {
+    return dateString;
+  }
+}
+
+// ---------------------------------------
 
 // טעינת נתונים
 function loadData() {
@@ -144,7 +191,13 @@ function loadData() {
   const cb = 'cb_' + Date.now();
   window[cb] = function(data) {
     delete window[cb];
-    lessons = data.map(r => ({ ...r, teacher: String(r.teacher || '').trim() }));
+    // כאן אנחנו משתמשים בפונקציות הפירמוט החדשות בעת הטעינה
+    lessons = data.map(r => ({ 
+      ...r, 
+      date: formatDate(r.date), // מפרמט תאריך
+      day: formatDay(r.day),   // מחלץ יום
+      teacher: String(r.teacher || '').trim() 
+    }));
     
     // חילוץ מורים קיימים מהגיליון
     teachers = [...new Set(lessons.map(l => l.teacher).filter(Boolean))];
@@ -202,12 +255,12 @@ function render() {
     });
 
     tr.innerHTML = `
-      <td>${l.date || ''}</td>
-      <td>${l.day || ''}</td>
-      <td>${l.time || ''}</td>
-      <td>${l.type || ''}</td>
-      <td>${l.loc || ''}</td>
-      <td>
+      <td class="date-col">${l.date}</td>
+      <td class="day-col">${l.day}</td>
+      <td class="time-col">${l.time || ''}</td>
+      <td class="type-col">${l.type || ''}</td>
+      <td class="loc-col">${l.loc || ''}</td>
+      <td class="teacher-col">
         <select class="assign ${l.teacher ? 'filled' : ''}" onchange="updateAssignment(${l.rowIndex}, this.value)">
           ${opts}
         </select>
@@ -234,7 +287,7 @@ function addTeacher() {
     if (!teachers.includes(name.trim())) {
       teachers.push(name.trim());
       renderChips();
-      render(); // זה יעדכן את רשימות הבחירה בטבלה
+      render();
     }
   }
 }
@@ -242,7 +295,7 @@ function addTeacher() {
 function shareLink() {
   const url = 'https://zoharrb-ci.github.io/studio-april/';
   navigator.clipboard.writeText(url).then(() => {
-    alert('הקישור הועתק ללוח! עכשיו אפשר לשלוח בוואטסאפ.');
+    alert('הקישור הועתק ללוח!');
   });
 }
 
