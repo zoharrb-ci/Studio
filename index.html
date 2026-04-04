@@ -16,14 +16,6 @@
     --accent-light: #e8f5ee;
     --amber: #92400e;
     --amber-light: #fef3c7;
-    --blue: #1e3a5f;
-    --blue-light: #dbeafe;
-    --purple: #4c1d95;
-    --purple-light: #ede9fe;
-    --rose: #881337;
-    --rose-light: #ffe4e6;
-    --teal: #0f5240;
-    --teal-light: #ccfbf1;
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body {
@@ -40,7 +32,7 @@
     display: flex; align-items: flex-start; justify-content: space-between;
     margin-bottom: 2rem; gap: 1rem; flex-wrap: wrap;
   }
-  .header-title { font-size: 28px; font-weight: 700; letter-spacing: -0.5px; }
+  .header-title { font-size: 28px; font-weight: 700; }
   .header-sub { font-size: 14px; color: var(--muted); margin-top: 4px; }
   .header-actions { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
 
@@ -48,9 +40,9 @@
   .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 1.5rem; }
   .stat {
     background: var(--surface); border: 1px solid var(--border);
-    border-radius: 12px; padding: 16px 18px;
+    border-radius: 12px; padding: 16px;
   }
-  .stat-label { font-size: 12px; color: var(--muted); margin-bottom: 6px; font-weight: 500; }
+  .stat-label { font-size: 12px; color: var(--muted); margin-bottom: 6px; }
   .stat-value { font-size: 28px; font-weight: 700; }
   .stat-value.green { color: var(--accent); }
   .stat-value.amber { color: var(--amber); }
@@ -62,27 +54,12 @@
     background: var(--surface); border: 1px solid var(--border);
     border-radius: 12px; padding: 12px 16px;
   }
-  .teachers-label { font-size: 13px; color: var(--muted); font-weight: 500; flex-shrink: 0; }
   .chip {
     display: inline-flex; align-items: center; gap: 6px;
     padding: 5px 12px; border-radius: 20px; font-size: 13px; font-weight: 500;
     cursor: pointer; border: 1.5px solid transparent; transition: all 0.15s;
-    user-select: none;
   }
-  .chip .dot { width: 7px; height: 7px; border-radius: 50%; background: currentColor; flex-shrink: 0; }
-  .chip.active { border-color: currentColor; }
-  .chip-count { font-size: 11px; opacity: 0.65; }
-
-  /* Filters */
-  .filters { display: flex; gap: 10px; margin-bottom: 1.25rem; flex-wrap: wrap; }
-  select.filter {
-    font-family: 'Heebo', sans-serif;
-    font-size: 13px; padding: 8px 12px;
-    border-radius: 8px; border: 1px solid var(--border);
-    background: var(--surface); color: var(--text); cursor: pointer;
-    outline: none;
-  }
-  select.filter:focus { border-color: var(--accent); }
+  .chip.active { border-color: currentColor; background: #eee; }
 
   /* Table */
   .table-wrap {
@@ -90,351 +67,183 @@
     border-radius: 16px; overflow: hidden;
   }
   table { width: 100%; border-collapse: collapse; }
-  thead { background: #f0ede6; }
-  th {
-    font-size: 11px; font-weight: 700; color: var(--muted);
-    padding: 12px 14px; text-align: right;
-    border-bottom: 1px solid var(--border);
-    letter-spacing: 0.5px; text-transform: uppercase;
-  }
-  td {
-    padding: 11px 14px; font-size: 13px;
-    border-bottom: 1px solid #f0ede6; vertical-align: middle;
-  }
-  tr:last-child td { border-bottom: none; }
-  tr.row-assigned { background: #fff; }
-  tr.row-unassigned { background: #fffbf0; }
-  tr:hover td { background: #f9f7f2; }
+  th { font-size: 11px; color: var(--muted); padding: 12px; text-align: right; border-bottom: 1px solid var(--border); background: #f0ede6; }
+  td { padding: 11px 12px; font-size: 13px; border-bottom: 1px solid #f0ede6; }
 
-  .badge {
-    display: inline-block; padding: 3px 9px;
-    border-radius: 20px; font-size: 11px; font-weight: 500;
-  }
-  .loc-badge {
-    display: inline-block; padding: 2px 8px; border-radius: 6px;
-    font-size: 11px; background: #f0ede6; color: var(--muted);
-  }
-  select.assign {
-    font-family: 'Heebo', sans-serif;
-    font-size: 13px; padding: 5px 10px;
-    border-radius: 8px; border: 1px solid var(--border);
-    background: #fff; color: var(--text);
-    cursor: pointer; width: 100%; outline: none;
-    transition: border-color 0.15s;
-  }
-  select.assign:focus { border-color: var(--accent); }
-  select.assign.filled { border-color: var(--accent); color: var(--accent); font-weight: 500; background: var(--accent-light); }
-
-  /* Buttons */
+  /* New Buttons */
   .btn {
     font-family: 'Heebo', sans-serif;
     font-size: 13px; font-weight: 500;
     padding: 8px 16px; border-radius: 8px;
     border: 1px solid var(--border); background: var(--surface);
-    color: var(--text); cursor: pointer; transition: all 0.15s;
-    white-space: nowrap;
+    cursor: pointer; transition: 0.2s;
   }
   .btn:hover { background: #f0ede6; }
   .btn.primary { background: var(--accent); color: #fff; border-color: var(--accent); }
-  .btn.primary:hover { background: #245a42; }
 
-  /* Sync */
-  .sync {
-    display: inline-flex; align-items: center; gap: 6px;
-    font-size: 12px; padding: 6px 12px; border-radius: 20px;
-    font-weight: 500;
-  }
-  .sync.idle    { background: var(--accent-light);  color: var(--accent); }
-  .sync.loading { background: var(--blue-light);    color: var(--blue); }
-  .sync.saving  { background: var(--amber-light);   color: var(--amber); }
-  .sync.error   { background: #fee2e2;              color: #991b1b; }
-  .sync-dot { width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
-  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.2} }
-  .pulse { animation: pulse 1s infinite; }
-
-  .date-col { font-size: 12px; color: var(--muted); font-family: monospace; }
-  .time-col { font-size: 12px; font-family: monospace; color: var(--text); }
-  .day-col  { font-weight: 500; }
-
-  @media (max-width: 700px) {
-    body { padding: 1rem; }
-    .stats { grid-template-columns: 1fr 1fr; }
-    th:nth-child(5), td:nth-child(5) { display: none; }
-  }
+  .sync { font-size: 12px; padding: 6px 12px; border-radius: 20px; display: inline-flex; align-items: center; gap: 6px; }
+  .sync.loading { background: #dbeafe; color: #1e3a5f; }
+  .sync.idle { background: var(--accent-light); color: var(--accent); }
+  
+  select.assign { width: 100%; padding: 5px; border-radius: 6px; border: 1px solid var(--border); font-family: 'Heebo'; }
+  select.assign.filled { background: var(--accent-light); border-color: var(--accent); font-weight: bold; }
 </style>
 </head>
 <body>
 <div class="page">
-
   <div class="header">
     <div>
-      <div class="header-title">שיבוץ מורים — יוגה</div>
-      <div class="header-sub" id="subtitle">טוען נתונים מהגיליון...</div>
+      <div class="header-title">ניהול שיבוץ מורים — יוגה</div>
+      <div class="header-sub" id="subtitle">טוען נתונים...</div>
     </div>
     <div class="header-actions">
-      <div class="sync loading" id="sync">
-        <span class="sync-dot pulse" id="sync-dot"></span>
-        <span id="sync-text">טוען...</span>
-      </div>
+      <div class="sync loading" id="sync"><span id="sync-text">מתחבר...</span></div>
+      <button class="btn" onclick="window.open('https://zoharrb-ci.github.io/studio-april/', '_blank')">👁️ תצוגת שיעורים</button>
+      <button class="btn" onclick="shareLink()">🔗 שיתוף קישור</button>
       <button class="btn" onclick="loadData()">↻ רענן</button>
-      <button class="btn" onclick="exportCSV()">ייצוא CSV</button>
     </div>
   </div>
 
   <div class="stats">
     <div class="stat"><div class="stat-label">סה״כ שיעורים</div><div class="stat-value" id="s-total">—</div></div>
     <div class="stat"><div class="stat-label">משובצים</div><div class="stat-value green" id="s-assigned">—</div></div>
-    <div class="stat"><div class="stat-label">ממתינים לשיבוץ</div><div class="stat-value amber" id="s-pending">—</div></div>
+    <div class="stat"><div class="stat-label">ממתינים</div><div class="stat-value amber" id="s-pending">—</div></div>
   </div>
 
   <div class="teachers-bar">
-    <span class="teachers-label">מורים:</span>
+    <span style="font-size:13px; color:var(--muted)">מורים פעילים:</span>
     <div id="chips" style="display:flex;gap:6px;flex-wrap:wrap;"></div>
-    <button class="btn" style="padding:4px 12px;font-size:12px;" onclick="addTeacher()">+ הוסף מורה</button>
-  </div>
-
-  <div class="filters">
-    <select class="filter" id="f-type" onchange="render()"><option value="">כל סוגי השיעורים</option></select>
-    <select class="filter" id="f-teacher" onchange="filterTeacher()"><option value="">כל המורים</option></select>
-    <select class="filter" id="f-status" onchange="render()">
-      <option value="">כל הסטטוסים</option>
-      <option value="assigned">משובצים</option>
-      <option value="unassigned">ממתינים</option>
-    </select>
+    <button class="btn" style="padding:4px 10px; font-size:12px;" onclick="addTeacher()">+ הוסף מורה לרשימה</button>
   </div>
 
   <div class="table-wrap">
     <table>
       <thead>
         <tr>
-          <th style="width:10%">תאריך</th>
-          <th style="width:10%">יום</th>
-          <th style="width:13%">שעה</th>
-          <th style="width:17%">סוג שיעור</th>
-          <th style="width:9%">מיקום</th>
-          <th style="width:6%">מקס׳</th>
-          <th style="width:35%">מורה משובץ/ת</th>
+          <th>תאריך</th><th>יום</th><th>שעה</th><th>סוג שיעור</th><th>מיקום</th><th>מורה משובץ/ת</th>
         </tr>
       </thead>
-      <tbody id="tbody">
-        <tr><td colspan="7" style="text-align:center;padding:2rem;color:#888;">טוען נתונים...</td></tr>
-      </tbody>
+      <tbody id="tbody"></tbody>
     </table>
   </div>
 </div>
 
 <script>
 const URL = 'https://script.google.com/macros/s/AKfycbzNS2b2YtYUYed_-3G6QhQudUAjkfle7FecV04vEMQ-p9o7LEEs-Z0qz8_sTJZ1ofL5-g/exec';
+let lessons = [], teachers = [], selectedT = null;
 
-const DAYS = ['ראשון','שני','שלישי','רביעי','חמישי','שישי','שבת'];
-const TYPE_COLORS = [
-  {bg:'#dbeafe',c:'#1e3a5f'},{bg:'#ede9fe',c:'#4c1d95'},
-  {bg:'#ffe4e6',c:'#881337'},{bg:'#ccfbf1',c:'#0f5240'},
-  {bg:'#fef3c7',c:'#92400e'},{bg:'#dcfce7',c:'#14532d'},
-  {bg:'#fce7f3',c:'#831843'},
-];
-const T_COLORS = ['#2d6a4f','#1e3a5f','#c2410c','#be185d','#5b21b6','#166534','#92400e','#0e7490'];
-
-let lessons=[], teachers=[], typeMap={}, selectedT=null;
-
-function sync(state,text){
-  document.getElementById('sync').className='sync '+state;
-  document.getElementById('sync-dot').className='sync-dot'+(state==='loading'||state==='saving'?' pulse':'');
-  document.getElementById('sync-text').textContent=text;
+function sync(state, text) {
+  const s = document.getElementById('sync');
+  s.className = 'sync ' + state;
+  document.getElementById('sync-text').textContent = text;
 }
 
-function parseDay(v){
-  if(!v) return '';
-  const s=String(v);
-  if(s.match(/[A-Z][a-z]{2}.*\d{4}/)){const d=new Date(s);if(!isNaN(d))return DAYS[d.getDay()];}
-  return s.replace('יום ','').replace(',','').trim();
-}
-function parseDate(v){
-  if(!v) return '';
-  const s=String(v);
-  if(s.match(/[A-Z][a-z]{2}.*\d{4}/)){
-    const d=new Date(s);
-    if(!isNaN(d)) return String(d.getDate()).padStart(2,'0')+'/'+String(d.getMonth()+1).padStart(2,'0')+'/'+d.getFullYear();
-  }
-  return s;
-}
-
-function loadData(){
-  sync('loading','טוען מגיליון...');
-  document.getElementById('tbody').innerHTML='<tr><td colspan="7" style="text-align:center;padding:2rem;color:#888;">טוען נתונים...</td></tr>';
-
-  const cb='cb_'+Date.now();
-  const t=setTimeout(()=>{
+// טעינת נתונים
+function loadData() {
+  sync('loading', 'מעדכן נתונים...');
+  const cb = 'cb_' + Date.now();
+  window[cb] = function(data) {
     delete window[cb];
-    sync('error','timeout');
-    document.getElementById('tbody').innerHTML='<tr><td colspan="7" style="text-align:center;padding:2rem;color:#c00;">שגיאה — לחץ רענן לנסות שוב</td></tr>';
-  },12000);
-
-  window[cb]=function(data){
-    clearTimeout(t); delete window[cb];
-    document.getElementById('jsonp')?.remove();
-    if(!Array.isArray(data)||!data.length){sync('error','אין נתונים');return;}
-
-    lessons=data.map((r,i)=>({
-      i: r.rowIndex??i,
-      date: parseDate(r.date),
-      day: parseDay(r.day),
-      time: String(r.time||'').trim(),
-      teacher: String(r.teacher||'').trim(),
-      type: String(r.type||'').trim(),
-      loc: String(r.loc||'').trim(),
-      max: Number(r.max)||15,
-    }));
-
-    // צבעי סוגים
-    [...new Set(lessons.map(l=>l.type).filter(Boolean))].forEach((t,i)=>{
-      typeMap[t]=TYPE_COLORS[i%TYPE_COLORS.length];
-    });
-
-    // מורים
-    [...new Set(lessons.map(l=>l.teacher).filter(Boolean))].forEach(t=>{
-      if(!teachers.includes(t)) teachers.push(t);
-    });
-
-    // פילטר סוגים
-    const sel=document.getElementById('f-type');
-    sel.innerHTML='<option value="">כל סוגי השיעורים</option>';
-    Object.keys(typeMap).forEach(t=>{
-      sel.innerHTML+=`<option value="${t}">${t}</option>`;
-    });
-
-    const assigned=lessons.filter(l=>l.teacher).length;
-    document.getElementById('subtitle').textContent=`אפריל 2026 · ${lessons.length} שיעורים · ${assigned} משובצים`;
-    sync('idle','נטען ✓');
-    setTimeout(()=>sync('idle','מחובר לגיליון'),2000);
-    renderChips(); render();
+    lessons = data.map(r => ({ ...r, teacher: String(r.teacher || '').trim() }));
+    
+    // חילוץ מורים קיימים מהגיליון
+    teachers = [...new Set(lessons.map(l => l.teacher).filter(Boolean))];
+    
+    renderChips();
+    render();
+    sync('idle', 'מחובר לגיליון ✓');
   };
-
-  const s=document.createElement('script');
-  s.id='jsonp'; s.src=URL+'?callback='+cb+'&t='+Date.now();
-  s.onerror=()=>{clearTimeout(t);delete window[cb];sync('error','שגיאה');};
+  const s = document.createElement('script');
+  s.src = `${URL}?callback=${cb}&t=${Date.now()}`;
   document.head.appendChild(s);
 }
 
-async function save(idx,teacher){
-  sync('saving','שומר...');
-  try{
-    await fetch(URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({rowIndex:idx,teacher})});
-    sync('idle','נשמר ✓');
-    setTimeout(()=>sync('idle','מחובר לגיליון'),2000);
-  }catch(e){sync('error','שגיאת שמירה');setTimeout(()=>sync('idle','מחובר לגיליון'),3000);}
+// שמירה לגיליון
+async function save(idx, teacher) {
+  sync('loading', 'שומר בגיליון...');
+  try {
+    await fetch(URL, {
+      method: 'POST',
+      mode: 'no-cors',
+      body: JSON.stringify({ rowIndex: idx, teacher: teacher })
+    });
+    sync('idle', 'השינוי נשמר ✓');
+  } catch (e) {
+    sync('error', 'שגיאת תקשורת');
+  }
 }
 
-function getTColor(n){const i=teachers.indexOf(n);return i>=0?T_COLORS[i%T_COLORS.length]:'#888';}
-
-function renderChips(){
-  const c=document.getElementById('chips');
-  c.innerHTML='';
-  teachers.forEach(t=>{
-    const col=getTColor(t);
-    const cnt=lessons.filter(l=>l.teacher===t).length;
-    const d=document.createElement('span');
-    d.className='chip'+(selectedT===t?' active':'');
-    d.style.color=col; d.style.background=col+'18';
-    d.innerHTML=`<span class="dot"></span>${t} <span class="chip-count">(${cnt})</span>`;
-    d.onclick=()=>{
-      selectedT=selectedT===t?null:t;
-      document.getElementById('f-teacher').value=selectedT||'';
+function renderChips() {
+  const container = document.getElementById('chips');
+  container.innerHTML = '';
+  teachers.forEach(t => {
+    const chip = document.createElement('span');
+    chip.className = 'chip' + (selectedT === t ? ' active' : '');
+    chip.textContent = t;
+    chip.onclick = () => {
+      selectedT = (selectedT === t) ? null : t;
       renderChips(); render();
     };
-    c.appendChild(d);
+    container.appendChild(chip);
   });
-  const sel=document.getElementById('f-teacher');
-  const cur=sel.value;
-  sel.innerHTML='<option value="">כל המורים</option>';
-  teachers.forEach(t=>{sel.innerHTML+=`<option value="${t}"${t===cur?' selected':''}>${t}</option>`;});
 }
 
-function stats(){
-  const a=lessons.filter(l=>l.teacher).length;
-  document.getElementById('s-total').textContent=lessons.length;
-  document.getElementById('s-assigned').textContent=a;
-  document.getElementById('s-pending').textContent=lessons.length-a;
-}
+function render() {
+  const tbody = document.getElementById('tbody');
+  tbody.innerHTML = '';
+  
+  const filtered = lessons.filter(l => !selectedT || l.teacher === selectedT);
+  
+  filtered.forEach(l => {
+    const tr = document.createElement('tr');
+    let opts = '<option value="">בחר מורה...</option>';
+    teachers.forEach(t => {
+      opts += `<option value="${t}" ${l.teacher === t ? 'selected' : ''}>${t}</option>`;
+    });
 
-function render(){
-  const ft=document.getElementById('f-type').value;
-  const ftr=document.getElementById('f-teacher').value;
-  const fs=document.getElementById('f-status').value;
-  const tbody=document.getElementById('tbody');
-  tbody.innerHTML='';
-
-  const list=lessons.filter(l=>{
-    if(ft&&l.type!==ft) return false;
-    if(ftr&&l.teacher!==ftr) return false;
-    if(fs==='assigned'&&!l.teacher) return false;
-    if(fs==='unassigned'&&l.teacher) return false;
-    return true;
-  });
-
-  if(!list.length){
-    tbody.innerHTML='<tr><td colspan="7" style="text-align:center;padding:2rem;color:#888;">אין שיעורים התואמים את הסינון</td></tr>';
-    stats(); return;
-  }
-
-  list.forEach(l=>{
-    const tc=typeMap[l.type]||{bg:'#f0ede6',c:'#555'};
-    const loc=l.loc?`<span class="loc-badge">${l.loc}</span>`:'<span style="color:#bbb">—</span>';
-    let opts='<option value="">בחר מורה...</option>';
-    teachers.forEach(t=>{opts+=`<option value="${t}"${l.teacher===t?' selected':''}>${t}</option>`;});
-    opts+='<option value="__new__">+ מורה חדשה...</option>';
-
-    const tr=document.createElement('tr');
-    tr.className=l.teacher?'row-assigned':'row-unassigned';
-    tr.innerHTML=`
-      <td class="date-col">${l.date}</td>
-      <td class="day-col">יום ${l.day}</td>
-      <td class="time-col">${l.time}</td>
-      <td><span class="badge" style="background:${tc.bg};color:${tc.c}">${l.type}</span></td>
-      <td>${loc}</td>
-      <td style="text-align:center;color:#888">${l.max}</td>
-      <td><select class="assign${l.teacher?' filled':''}" onchange="assign(${l.i},this.value,this)">${opts}</select></td>
+    tr.innerHTML = `
+      <td>${l.date || ''}</td>
+      <td>${l.day || ''}</td>
+      <td>${l.time || ''}</td>
+      <td>${l.type || ''}</td>
+      <td>${l.loc || ''}</td>
+      <td>
+        <select class="assign ${l.teacher ? 'filled' : ''}" onchange="updateAssignment(${l.rowIndex}, this.value)">
+          ${opts}
+        </select>
+      </td>
     `;
     tbody.appendChild(tr);
   });
-  stats();
+
+  document.getElementById('s-total').textContent = lessons.length;
+  document.getElementById('s-assigned').textContent = lessons.filter(l => l.teacher).length;
+  document.getElementById('s-pending').textContent = lessons.length - lessons.filter(l => l.teacher).length;
 }
 
-function assign(idx,val,sel){
-  if(val==='__new__'){
-    const n=prompt('שם המורה החדשה:');
-    if(n&&n.trim()){
-      if(!teachers.includes(n.trim())) teachers.push(n.trim());
-      val=n.trim();
-    } else {sel.value=lessons.find(l=>l.i===idx)?.teacher||'';return;}
-  }
-  const l=lessons.find(x=>x.i===idx);
-  if(l) l.teacher=val;
-  sel.className='assign'+(val?' filled':'');
-  sel.closest('tr').className=val?'row-assigned':'row-unassigned';
-  renderChips(); stats();
-  save(idx,val);
+function updateAssignment(rowIndex, val) {
+  const lesson = lessons.find(l => l.rowIndex === rowIndex);
+  if (lesson) lesson.teacher = val;
+  save(rowIndex, val);
+  render();
 }
 
-function filterTeacher(){
-  selectedT=document.getElementById('f-teacher').value||null;
-  renderChips(); render();
-}
-
-function addTeacher(){
-  const n=prompt('שם המורה החדשה:');
-  if(n&&n.trim()&&!teachers.includes(n.trim())){
-    teachers.push(n.trim()); renderChips(); render();
+function addTeacher() {
+  const name = prompt('הכנס שם מורה חדשה:');
+  if (name && name.trim()) {
+    if (!teachers.includes(name.trim())) {
+      teachers.push(name.trim());
+      renderChips();
+      render(); // זה יעדכן את רשימות הבחירה בטבלה
+    }
   }
 }
 
-function exportCSV(){
-  let csv='תאריך,יום,שעה,סוג שיעור,מיקום,מקס,מורה\n';
-  lessons.forEach(l=>{csv+=`${l.date},יום ${l.day},${l.time},${l.type},${l.loc},${l.max},${l.teacher}\n`;});
-  const a=document.createElement('a');
-  a.href=URL.createObjectURL(new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8'}));
-  a.download='שיבוץ_מורים_אפריל_2026.csv'; a.click();
+function shareLink() {
+  const url = 'https://zoharrb-ci.github.io/studio-april/';
+  navigator.clipboard.writeText(url).then(() => {
+    alert('הקישור הועתק ללוח! עכשיו אפשר לשלוח בוואטסאפ.');
+  });
 }
 
 loadData();
