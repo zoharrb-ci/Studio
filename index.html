@@ -3,60 +3,100 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ניהול מערכת שעות — יוגה</title>
+<title>מערכת שעות סטודיו קשובה</title>
 <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;700&display=swap" rel="stylesheet">
 <style>
   :root { --bg: #f7f5f0; --surface: #ffffff; --border: #e5e2da; --accent: #2d6a4f; --accent-light: #e8f5ee; --danger: #ae2012; }
   body { font-family: 'Heebo', sans-serif; background: var(--bg); padding: 1.5rem; margin: 0; }
   .page { max-width: 1200px; margin: 0 auto; }
   
-  /* Stats Section */
-  .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 1.5rem; }
-  .stat { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 16px; text-align: center; }
+  /* Header & Stats */
+  .top-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; }
+  .status-indicator { font-size: 13px; padding: 6px 14px; border-radius: 20px; border: 1px solid var(--border); background: white; }
+  .status-indicator.syncing { color: #92400e; background: #fef3c7; }
+  
+  .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 1rem; }
+  .stat { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 16px; text-align: center; box-shadow: 0 2px 4px rgba(0,0,0,0.02); }
+  .stat-label { font-size: 13px; color: #666; margin-bottom: 4px; }
   .stat-val { font-size: 26px; font-weight: 700; color: var(--accent); }
 
-  /* Header & Buttons */
-  .top-info { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; }
-  .status-indicator { font-size: 13px; padding: 6px 14px; border-radius: 20px; border: 1px solid var(--border); background: white; }
-  .btn { padding: 9px 18px; border-radius: 8px; cursor: pointer; border: 1px solid var(--border); font-family: 'Heebo'; font-size: 14px; font-weight: 500; }
-  .btn-add { background: var(--accent); color: white; border: none; }
+  /* Teachers Bar */
+  .teachers-bar { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 12px 16px; margin-bottom: 1.5rem; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; box-shadow: 0 2px 4px rgba(0,0,0,0.02); }
+  .chip { display: inline-flex; align-items: center; gap: 6px; padding: 5px 12px; border-radius: 20px; font-size: 13px; background: #eee; cursor: pointer; border: 1.5px solid transparent; }
+  .chip.active { border-color: var(--accent); background: var(--accent-light); }
+  .chip-count { font-size: 11px; opacity: 0.65; }
+
+  .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; }
   
-  /* Table */
-  .table-wrap { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; margin-bottom: 1rem; }
-  table { width: 100%; border-collapse: collapse; }
-  th { background: #f0ede6; padding: 12px; font-size: 13px; text-align: right; }
-  td { padding: 10px; border-bottom: 1px solid #f0ede6; }
+  /* Table Styles */
+  .table-wrap { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.03); }
+  table { width: 100%; border-collapse: collapse; table-layout: fixed; }
+  th { background: #f0ede6; padding: 14px; font-size: 13px; text-align: right; border-bottom: 2px solid var(--border); }
+  td { padding: 10px; border-bottom: 1px solid #f0ede6; vertical-align: middle; }
 
-  /* New Lesson Modal (החלונית החדשה) */
+  /* UI Elements */
+  .btn { padding: 9px 18px; border-radius: 8px; cursor: pointer; border: 1px solid var(--border); font-family: 'Heebo'; font-size: 14px; font-weight: 500; transition: 0.2s; background: white; }
+  .btn:hover { background: #f0ede6; }
+  .btn-add { background: var(--accent); color: white; border: none; }
+  .btn-add:hover { background: #23523d; }
+  .btn-danger { color: var(--danger); background: #fff5f5; border: 1px solid #f8d7da; padding: 6px 10px; font-size: 12px; }
+  
+  input, select { width: 100%; padding: 8px; border: 1px solid var(--border); border-radius: 6px; font-family: 'Heebo'; font-size: 14px; background: #fcfcfb; box-sizing: border-box; }
+  input:focus, select:focus { outline: none; border-color: var(--accent); background: white; }
+  .day-col { font-weight: 700; color: var(--accent); font-size: 14px; }
+
+  /* Modal */
   .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center; }
-  .modal-content { background: white; padding: 25px; border-radius: 15px; width: 400px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
-  .modal-content h3 { margin-top: 0; color: var(--accent); }
-  .modal-content input { margin-bottom: 12px; width: 100%; padding: 8px; border: 1px solid var(--border); border-radius: 6px; box-sizing: border-box; }
-  .modal-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 10px; }
+  .modal-content { background: white; padding: 25px; border-radius: 15px; width: 400px; max-width: 90%; box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
+  .modal-content h3 { margin-top: 0; color: var(--accent); margin-bottom: 20px; }
+  .modal-group { margin-bottom: 15px; }
+  .modal-group label { display: block; margin-bottom: 5px; font-size: 13px; font-weight: 500; }
+  .modal-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 25px; }
+  .error-msg { color: var(--danger); font-size: 12px; margin-top: 4px; display: none; }
 
-  input, select { padding: 6px; border: 1px solid var(--border); border-radius: 6px; font-family: 'Heebo'; }
-  .day-label { font-weight: bold; color: var(--accent); }
+  /* Main Title */
+  .main-title {
+    background: #d8f3dc; /* צבע פסטל בולט תואם */
+    color: var(--accent);
+    text-align: center;
+    padding: 18px;
+    border-radius: 12px;
+    margin-top: 0;
+    margin-bottom: 20px;
+    font-size: 28px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+  }
 </style>
 </head>
 <body>
 
 <div class="page">
-  <div class="top-info">
+  <h1 class="main-title">מערכת שעות סטודיו קשובה</h1>
+
+  <div class="top-bar">
     <div id="status" class="status-indicator">מתחבר לגיליון...</div>
-    <div style="display:flex; gap:10px;">
+    <div style="display:flex; gap:10px; flex-wrap: wrap;">
+      <button class="btn" onclick="window.open('https://zoharrb-ci.github.io/studio-april/', '_blank')">👁️ תצוגת תלמידות</button>
+      <button class="btn" onclick="shareLink()">🔗 העתקת קישור</button>
       <button class="btn" onclick="alert('עזרה (זוהר): 052-26567815')">❓ עזרה</button>
       <button class="btn" onclick="loadData()">↻ רענן</button>
     </div>
   </div>
 
   <div class="stats">
-    <div class="stat"><div>סה״כ שיעורים</div><div id="s-total" class="stat-val">0</div></div>
-    <div class="stat"><div>משובצים</div><div id="s-done" class="stat-val">0</div></div>
-    <div class="stat"><div>ממתינים</div><div id="s-wait" class="stat-val" style="color:#92400e">0</div></div>
+    <div class="stat"><div class="stat-label">סה״כ שיעורים</div><div id="s-total" class="stat-val">0</div></div>
+    <div class="stat"><div class="stat-label">שיעורים משובצים</div><div id="s-done" class="stat-val">0</div></div>
+    <div class="stat"><div class="stat-label">ממתינים לשיבוץ</div><div id="s-wait" class="stat-val" style="color:#92400e">0</div></div>
   </div>
 
-  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
-    <h2>מערכת שעות</h2>
+  <div class="teachers-bar">
+    <span style="font-size:13px; color:var(--muted); font-weight: 500;">מורות פעילות:</span>
+    <div id="chips" style="display:flex; gap:6px; flex-wrap:wrap; flex-grow: 1;"></div>
+    <button class="btn" style="padding:6px 12px; font-size:12px;" onclick="addTeacher()">+ הוספת מורה</button>
+  </div>
+
+  <div class="header">
+    <div id="current-datetime" style="flex-grow: 1; font-size: 15px; font-weight: 500; color: var(--muted);">טוען תאריך ושעה...</div>
     <button class="btn btn-add" onclick="openModal()">+ הוסף שיעור</button>
   </div>
 
@@ -64,12 +104,12 @@
     <table>
       <thead>
         <tr>
-          <th style="width:15%">תאריך</th>
-          <th style="width:15%">יום</th>
-          <th style="width:12%">שעה</th>
+          <th style="width:12%">תאריך</th>
+          <th style="width:10%">יום</th>
+          <th style="width:14%">שעה</th>
           <th style="width:20%">סוג שיעור</th>
-          <th style="width:13%">מיקום</th>
-          <th style="width:15%">מורה</th>
+          <th style="width:12%">מיקום</th>
+          <th style="width:22%">מורה</th>
           <th style="width:10%">פעולות</th>
         </tr>
       </thead>
@@ -77,114 +117,277 @@
     </table>
   </div>
 
-  <div style="display:flex; justify-content:center;">
-    <button class="btn btn-add" onclick="openModal()">+ הוסף שיעור</button>
+  <div style="display:flex; justify-content:center; padding:20px;">
+    <button class="btn btn-add" onclick="openModal()">+ הוסף שיעור בתחתית</button>
   </div>
 </div>
 
+<!-- Modal -->
 <div id="addModal" class="modal">
   <div class="modal-content">
     <h3>הוספת שיעור חדש</h3>
-    <label>תאריך (DD/MM):</label>
-    <input type="text" id="m-date" placeholder="למשל 05/04" onchange="updateModalDay(this.value)">
-    <label>יום בשבוע:</label>
-    <input type="text" id="m-day" readonly style="background:#f0f0f0">
-    <label>שעה:</label>
-    <input type="text" id="m-time" placeholder="08:15-09:30">
-    <label>סוג שיעור:</label>
-    <input type="text" id="m-type">
+    
+    <div class="modal-group">
+      <label>תאריך (פורמט: DD/MM)</label>
+      <input type="text" id="m-date" placeholder="למשל 05/04" onchange="validateAndUpdateDay()">
+      <div id="err-date" class="error-msg">יש להזין תאריך בפורמט תקין (למשל 05/04)</div>
+    </div>
+    
+    <div class="modal-group">
+      <label>יום בשבוע</label>
+      <input type="text" id="m-day" readonly style="background:#f0f0f0; color: var(--accent); font-weight: bold;" tabindex="-1">
+    </div>
+    
+    <div class="modal-group">
+      <label>שעה (פורמט: HH:MM-HH:MM)</label>
+      <input type="text" id="m-time" placeholder="למשל 08:30-09:45" onchange="validateTime()">
+      <div id="err-time" class="error-msg">יש להזין שעות בפורמט תקין (למשל 08:30-09:45)</div>
+    </div>
+    
+    <div class="modal-group">
+      <label>סוג שיעור</label>
+      <input type="text" id="m-type" placeholder="למשל: יוגה רכה">
+    </div>
+
+    <div class="modal-group">
+      <label>מורה משובצת (אופציונלי)</label>
+      <select id="m-teacher">
+        <!-- יתמלא אוטומטית מקוד ה-JS -->
+      </select>
+    </div>
+    
     <div class="modal-actions">
       <button class="btn" onclick="closeModal()">ביטול</button>
-      <button class="btn btn-add" onclick="saveNewLesson()">שמור שיעור</button>
+      <button class="btn btn-add" id="btn-save-modal" onclick="saveNewLesson()">שמור שיעור</button>
     </div>
   </div>
 </div>
 
 <script>
 const URL = 'https://script.google.com/macros/s/AKfycbzNS2b2YtYUYed_-3G6QhQudUAjkfle7FecV04vEMQ-p9o7LEEs-Z0qz8_sTJZ1ofL5-g/exec';
-let lessons = [], teachers = [];
-const DAYS = ['יום ראשון', 'יום שני', 'יום שלישי', 'יום רביעי', 'יום חמישי', 'יום שישי', 'יום שבת'];
+let lessons = [], teachers = [], selectedT = null;
+const DAYS = ['ראשון', 'שני', 'שלישי', 'רביעי', 'חמישי', 'שישי', 'שבת'];
+
+function setStatus(text, isSyncing) {
+  const s = document.getElementById('status');
+  s.textContent = text;
+  s.className = 'status-indicator ' + (isSyncing ? 'syncing' : '');
+}
 
 function cleanDateDisplay(val) {
-  if (!val || typeof val !== 'string') return val;
-  if (val.includes('GMT')) return val.split(' ')[2] + '/' + (new Date(val).getMonth()+1);
-  return val;
+  if (!val) return '';
+  const strVal = String(val);
+  // מזהה פורמט תאריך ארוך של גוגל
+  if (strVal.includes('GMT') || strVal.includes('שעון') || strVal.match(/^\d{4}-\d{2}-\d{2}T/)) {
+    // מסיר את סוגריים עם אזור הזמן בעברית כדי למנוע שגיאות המרה
+    const cleanStr = strVal.replace(/\(.*\)/, '').trim();
+    const d = new Date(cleanStr);
+    if (!isNaN(d.getTime())) {
+      return `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}`;
+    }
+  }
+  return strVal.split(' ')[0].substring(0, 5); 
 }
 
-function updateModalDay(val) {
-  if (!val.includes('/')) return;
-  const [d, m] = val.split('/');
-  const dateObj = new Date(2026, m - 1, d);
-  document.getElementById('m-day').value = DAYS[dateObj.getDay()] || '';
+function cleanDayDisplay(val) {
+   if(!val) return '';
+   const strVal = String(val);
+   // מזהה פורמט תאריך ארוך של גוגל (אם זה גלש לעמודת היום)
+   if (strVal.includes('GMT') || strVal.includes('שעון') || strVal.match(/^\d{4}-\d{2}-\d{2}T/)) {
+     const cleanStr = strVal.replace(/\(.*\)/, '').trim();
+     const d = new Date(cleanStr);
+     if (!isNaN(d.getTime())) return DAYS[d.getDay()];
+   }
+   return strVal.replace('יום ', '').trim();
 }
 
-function openModal() { document.getElementById('addModal').style.display = 'flex'; }
-function closeModal() { document.getElementById('addModal').style.display = 'none'; }
+function updateDateTime() {
+  const now = new Date();
+  const dayName = DAYS[now.getDay()];
+  const dateStr = String(now.getDate()).padStart(2, '0') + '/' + String(now.getMonth() + 1).padStart(2, '0') + '/' + now.getFullYear();
+  const timeStr = String(now.getHours()).padStart(2, '0') + ':' + String(now.getMinutes()).padStart(2, '0');
+  document.getElementById('current-datetime').textContent = `יום ${dayName}, ${dateStr} | ${timeStr}`;
+}
+
+// הפעלה ראשונית ועדכון כל דקה
+updateDateTime();
+setInterval(updateDateTime, 60000);
 
 function loadData() {
+  setStatus('מעדכן נתונים...', true);
   const cb = 'cb_' + Date.now();
   window[cb] = (data) => {
     delete window[cb];
-    lessons = data.sort((a,b) => a.date.localeCompare(b.date));
+    
+    lessons = data.sort((a, b) => {
+      const dateA = cleanDateDisplay(a.date).split('/').reverse().join('');
+      const dateB = cleanDateDisplay(b.date).split('/').reverse().join('');
+      return dateA.localeCompare(dateB) || (a.time || '').localeCompare(b.time || '');
+    });
+    
     teachers = [...new Set(lessons.map(l => l.teacher).filter(Boolean))];
     render();
-    document.getElementById('status').textContent = 'מעודכן ✓';
+    renderChips();
+    setStatus('מחובר ומעודכן ✓', false);
   };
   const s = document.createElement('script');
   s.src = `${URL}?callback=${cb}&t=${Date.now()}`;
   document.head.appendChild(s);
 }
 
+function renderChips() {
+  const container = document.getElementById('chips');
+  container.innerHTML = '';
+  teachers.forEach(t => {
+    const count = lessons.filter(l => l.teacher === t).length;
+    const chip = document.createElement('span');
+    chip.className = `chip ${selectedT === t ? 'active' : ''}`;
+    chip.innerHTML = `${t} <span class="chip-count">(${count})</span>`;
+    chip.onclick = () => { selectedT = (selectedT === t) ? null : t; render(); renderChips(); };
+    container.appendChild(chip);
+  });
+}
+
+function addTeacher() {
+  const name = prompt('שם המורה החדשה:');
+  if (name && name.trim() && !teachers.includes(name.trim())) {
+    teachers.push(name.trim());
+    renderChips();
+    render();
+  }
+}
+
 function render() {
   const tbody = document.getElementById('tbody');
   tbody.innerHTML = '';
-  lessons.forEach(l => {
+  
+  const filtered = lessons.filter(l => !selectedT || l.teacher === selectedT);
+
+  filtered.forEach(l => {
     const tr = document.createElement('tr');
     tr.innerHTML = `
       <td>${cleanDateDisplay(l.date)}</td>
-      <td class="day-label">${l.day}</td>
-      <td><input type="text" value="${l.time}" onchange="updateCell(${l.rowIndex}, 'time', this.value)"></td>
-      <td><input type="text" value="${l.type}" onchange="updateCell(${l.rowIndex}, 'type', this.value)"></td>
-      <td><input type="text" value="${l.loc}" onchange="updateCell(${l.rowIndex}, 'loc', this.value)"></td>
+      <td class="day-col">${cleanDayDisplay(l.day)}</td>
+      <td><input type="text" value="${l.time || ''}" onchange="updateCell(${l.rowIndex}, 'time', this.value)"></td>
+      <td><input type="text" value="${l.type || ''}" onchange="updateCell(${l.rowIndex}, 'type', this.value)"></td>
+      <td><input type="text" value="${l.loc || ''}" onchange="updateCell(${l.rowIndex}, 'loc', this.value)"></td>
       <td>
         <select onchange="updateCell(${l.rowIndex}, 'teacher', this.value)">
-          <option value="">בחר...</option>
+          <option value="">בחר מורה...</option>
           ${teachers.map(t => `<option value="${t}" ${l.teacher === t ? 'selected' : ''}>${t}</option>`).join('')}
         </select>
       </td>
-      <td><button onclick="deleteRow(${l.rowIndex})" style="color:red; cursor:pointer; background:none; border:none;">מחק</button></td>
+      <td><button class="btn-danger" onclick="deleteRow(${l.rowIndex})">מחק</button></td>
     `;
     tbody.appendChild(tr);
   });
+
   document.getElementById('s-total').textContent = lessons.length;
   document.getElementById('s-done').textContent = lessons.filter(l => l.teacher).length;
   document.getElementById('s-wait').textContent = lessons.length - lessons.filter(l => l.teacher).length;
 }
 
+async function updateCell(rowIndex, field, value) {
+  setStatus('שומר שינוי...', true);
+  await fetch(URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ action: 'update', rowIndex, field, value }) });
+  setStatus('נשמר', false);
+  if(field === 'teacher') renderChips();
+}
+
+async function deleteRow(rowIndex) {
+  if (!confirm('למחוק שיעור זה לצמיתות?')) return;
+  setStatus('מוחק...', true);
+  await fetch(URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ action: 'deleteRow', rowIndex }) });
+  loadData();
+}
+
+function shareLink() {
+  const url = 'https://zoharrb-ci.github.io/studio-april/';
+  navigator.clipboard.writeText(url).then(() => {
+    alert('הקישור הועתק ללוח! עכשיו אפשר לשלוח אותו בוואטסאפ לתלמידות.');
+  }).catch(err => {
+    alert('שגיאה בהעתקת הקישור. ניתן להעתיק ידנית: ' + url);
+  });
+}
+
+/* === לוגיקת Modal === */
+function openModal() { 
+  document.getElementById('m-date').value = '';
+  document.getElementById('m-day').value = '';
+  document.getElementById('m-time').value = '';
+  document.getElementById('m-type').value = '';
+  document.getElementById('err-date').style.display = 'none';
+  document.getElementById('err-time').style.display = 'none';
+  
+  const select = document.getElementById('m-teacher');
+  select.innerHTML = '<option value="">בחר מורה...</option>' + teachers.map(t => `<option value="${t}">${t}</option>`).join('');
+  
+  document.getElementById('addModal').style.display = 'flex'; 
+}
+
+function closeModal() { 
+  document.getElementById('addModal').style.display = 'none'; 
+}
+
+function validateAndUpdateDay() {
+  const val = document.getElementById('m-date').value.trim();
+  const err = document.getElementById('err-date');
+  const dateRegex = /^(0[1-9]|[12][0-9]|3[01])\/(0[1-9]|1[012])$/;
+  
+  if (!dateRegex.test(val)) {
+    err.style.display = 'block';
+    document.getElementById('m-day').value = '';
+    return false;
+  }
+  
+  err.style.display = 'none';
+  const parts = val.split('/');
+  const dateObj = new Date(2026, parseInt(parts[1]) - 1, parseInt(parts[0]));
+  document.getElementById('m-day').value = DAYS[dateObj.getDay()];
+  return true;
+}
+
+function validateTime() {
+  const val = document.getElementById('m-time').value.trim();
+  const err = document.getElementById('err-time');
+  const timeRegex = /^([01]?[0-9]|2[0-3]):[0-5][0-9]-([01]?[0-9]|2[0-3]):[0-5][0-9]$/;
+  
+  if (val !== '' && !timeRegex.test(val)) {
+    err.style.display = 'block';
+    return false;
+  }
+  err.style.display = 'none';
+  return true;
+}
+
 async function saveNewLesson() {
+  const isDateValid = validateAndUpdateDay();
+  const isTimeValid = validateTime();
+  
+  if (!isDateValid || !isTimeValid) return;
+
+  const btn = document.getElementById('btn-save-modal');
+  btn.textContent = 'שומר...';
+  btn.disabled = true;
+
   const data = {
     action: 'addRow',
     date: document.getElementById('m-date').value,
     day: document.getElementById('m-day').value,
     time: document.getElementById('m-time').value,
     type: document.getElementById('m-type').value,
-    teacher: '', loc: 'סטודיו'
+    teacher: document.getElementById('m-teacher').value, 
+    loc: 'סטודיו'
   };
-  document.getElementById('status').textContent = 'שומר...';
+  
+  setStatus('יוצר שיעור חדש...', true);
   await fetch(URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify(data) });
+  
   closeModal();
-  setTimeout(loadData, 1000);
-}
-
-async function updateCell(rowIndex, field, value) {
-  await fetch(URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ action: 'update', rowIndex, field, value }) });
-}
-
-async function deleteRow(rowIndex) {
-  if (confirm('למחוק?')) {
-    await fetch(URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ action: 'deleteRow', rowIndex }) });
-    loadData();
-  }
+  btn.textContent = 'שמור שיעור';
+  btn.disabled = false;
+  
+  setTimeout(loadData, 1000); // טעינה מחדש כדי להציג את השורה
 }
 
 loadData();
