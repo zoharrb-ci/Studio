@@ -3,55 +3,60 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ניהול מערכת שעות - יוגה</title>
+<title>ניהול שיבוץ מורים — יוגה אפריל 2026</title>
 <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;700&display=swap" rel="stylesheet">
 <style>
   :root {
     --bg: #f7f5f0; --surface: #ffffff; --border: #e5e2da; --text: #1a1a18;
     --muted: #6b6860; --accent: #2d6a4f; --accent-light: #e8f5ee;
-    --danger: #ae2012; --danger-light: #fdf0ef;
+    --amber: #92400e; --danger: #ae2012;
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body { font-family: 'Heebo', sans-serif; background: var(--bg); color: var(--text); padding: 2rem; }
   .page { max-width: 1200px; margin: 0 auto; }
-  
-  .header { display: flex; justify-content: space-between; margin-bottom: 2rem; align-items: center; }
-  .header-actions { display: flex; gap: 8px; }
 
+  /* Header & Original Titles */
+  .header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 2rem; gap: 1rem; flex-wrap: wrap; }
+  .header-title { font-size: 28px; font-weight: 700; }
+  .header-sub { font-size: 14px; color: var(--muted); margin-top: 4px; }
+  .header-actions { display: flex; gap: 8px; align-items: center; }
+
+  /* Stats Section */
   .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 1.5rem; }
   .stat { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 16px; }
-  
-  .teachers-bar { 
-    background: var(--surface); border: 1px solid var(--border); border-radius: 12px; 
-    padding: 12px 16px; margin-bottom: 1.25rem; display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+  .stat-label { font-size: 12px; color: var(--muted); margin-bottom: 6px; }
+  .stat-value { font-size: 28px; font-weight: 700; }
+  .stat-value.green { color: var(--accent); }
+  .stat-value.amber { color: var(--amber); }
+
+  /* Teachers Bar */
+  .teachers-bar {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 12px 16px; 
+    margin-bottom: 1.25rem; display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
   }
-  
-  .chip { 
-    display: inline-flex; align-items: center; gap: 4px; padding: 5px 12px; 
+  .chip {
+    display: inline-flex; align-items: center; gap: 6px; padding: 5px 12px; 
     border-radius: 20px; font-size: 13px; background: #eee; cursor: pointer; border: 1.5px solid transparent;
   }
   .chip.active { border-color: var(--accent); background: var(--accent-light); }
-  .delete-chip { color: var(--danger); font-weight: bold; margin-right: 4px; padding: 0 4px; border-radius: 50%; }
-  .delete-chip:hover { background: var(--danger-light); }
+  .delete-x { color: var(--danger); font-weight: bold; margin-right: 4px; }
 
+  /* Table Style */
   .table-wrap { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; overflow: hidden; }
   table { width: 100%; border-collapse: collapse; }
-  th { background: #f0ede6; padding: 12px; font-size: 12px; text-align: right; color: var(--muted); }
-  td { padding: 10px; border-bottom: 1px solid #f0ede6; font-size: 13px; }
+  th { font-size: 11px; color: var(--muted); padding: 12px; text-align: right; border-bottom: 1px solid var(--border); background: #f0ede6; }
+  td { padding: 10px 12px; font-size: 13px; border-bottom: 1px solid #f0ede6; }
 
-  .btn { 
-    font-family: 'Heebo'; padding: 8px 16px; border-radius: 8px; border: 1px solid var(--border); 
-    cursor: pointer; background: white; transition: 0.2s; font-size: 13px;
-  }
-  .btn:hover { background: #f0ede6; }
+  /* Inputs & Buttons */
+  .btn { font-family: 'Heebo'; font-size: 13px; padding: 8px 16px; border-radius: 8px; border: 1px solid var(--border); cursor: pointer; background: white; }
   .btn-add { background: var(--accent); color: white; border: none; }
-  .btn-delete { color: var(--danger); border: 1px solid #f8d7da; background: #fff5f5; padding: 4px 8px; }
-  .btn-delete:hover { background: var(--danger); color: white; }
-
-  select, input { 
-    width: 100%; padding: 6px; border-radius: 6px; border: 1px solid var(--border); font-family: 'Heebo'; font-size: 13px;
-  }
-  .sync { font-size: 12px; padding: 6px 12px; border-radius: 20px; background: #eee; }
+  .btn-delete { color: var(--danger); border: 1px solid #f8d7da; background: #fff5f5; padding: 4px 8px; border-radius: 6px; cursor: pointer; }
+  
+  input.cell-edit { width: 100%; padding: 6px; border: 1px solid transparent; border-radius: 4px; font-family: 'Heebo'; font-size: 13px; }
+  input.cell-edit:hover, input.cell-edit:focus { border-color: var(--border); background: #fafafa; }
+  
+  select.assign { width: 100%; padding: 6px; border-radius: 6px; border: 1px solid var(--border); font-family: 'Heebo'; }
+  .sync { font-size: 12px; padding: 6px 12px; border-radius: 20px; background: var(--accent-light); color: var(--accent); }
 </style>
 </head>
 <body>
@@ -59,18 +64,26 @@
 <div class="page">
   <div class="header">
     <div>
-      <h1 style="font-size: 24px;">ניהול מערכת שעות</h1>
-      <div id="sync" class="sync">מתחבר לגיליון...</div>
+      <div class="header-title">ניהול שיבוץ מורים — יוגה</div>
+      <div class="header-sub" id="subtitle">אפריל 2026</div>
     </div>
     <div class="header-actions">
+      <div class="sync" id="sync">טוען...</div>
       <button class="btn btn-add" onclick="addRow()">+ הוסף שיעור חדש</button>
+      <button class="btn" onclick="shareLink()">🔗 שיתוף קישור</button>
       <button class="btn" onclick="loadData()">↻ רענן</button>
     </div>
   </div>
 
+  <div class="stats">
+    <div class="stat"><div class="stat-label">סה״כ שיעורים</div><div class="stat-value" id="s-total">0</div></div>
+    <div class="stat"><div class="stat-label">משובצים</div><div class="stat-value green" id="s-assigned">0</div></div>
+    <div class="stat"><div class="stat-label">ממתינים</div><div class="stat-value amber" id="s-pending">0</div></div>
+  </div>
+
   <div class="teachers-bar">
-    <span style="font-size:13px; color:var(--muted)">מורים:</span>
-    <div id="chips" style="display:flex; gap:6px;"></div>
+    <span style="font-size:13px; color:var(--muted)">מורים פעילים:</span>
+    <div id="chips" style="display:flex; gap:6px; flex-wrap:wrap;"></div>
     <button class="btn" style="padding:4px 8px; font-size:12px;" onclick="addTeacher()">+ הוסף מורה</button>
   </div>
 
@@ -80,10 +93,10 @@
         <tr>
           <th style="width:10%">תאריך</th>
           <th style="width:8%">יום</th>
-          <th style="width:10%">שעה</th>
-          <th style="width:20%">סוג שיעור</th>
+          <th style="width:12%">שעה</th>
+          <th style="width:25%">סוג שיעור</th>
           <th style="width:10%">מיקום</th>
-          <th style="width:25%">מורה</th>
+          <th style="width:28%">מורה משובץ/ת</th>
           <th style="width:7%">פעולות</th>
         </tr>
       </thead>
@@ -96,21 +109,29 @@
 const URL = 'https://script.google.com/macros/s/AKfycbzNS2b2YtYUYed_-3G6QhQudUAjkfle7FecV04vEMQ-p9o7LEEs-Z0qz8_sTJZ1ofL5-g/exec';
 let lessons = [], teachers = [], selectedT = null;
 
+const DAYS_HEBREW = ['ראשון', 'שני', 'שלישי', 'רביעי', 'חמישי', 'שישי', 'שבת'];
+
+function syncStatus(text) { document.getElementById('sync').textContent = text; }
+
+// תיקון תצוגת התאריך והיום (מניעת הפורמט הארוך)
+function parseDate(val) {
+  if (!val) return { display: '', dayName: '' };
+  const d = new Date(val);
+  if (isNaN(d.getTime())) return { display: val, dayName: '' };
+  
+  const display = `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}`;
+  const dayName = DAYS_HEBREW[d.getDay()];
+  return { display, dayName };
+}
+
 async function apiCall(action, data) {
-  document.getElementById('sync').textContent = 'מעדכן גיליון...';
-  try {
-    await fetch(URL, {
-      method: 'POST',
-      mode: 'no-cors',
-      body: JSON.stringify({ action, ...data })
-    });
-    document.getElementById('sync').textContent = 'נשמר בהצלחה ✓';
-  } catch (e) {
-    document.getElementById('sync').textContent = 'שגיאת שמירה';
-  }
+  syncStatus('שומר...');
+  await fetch(URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ action, ...data }) });
+  syncStatus('נשמר ✓');
 }
 
 function loadData() {
+  syncStatus('מעדכן...');
   const cb = 'cb_' + Date.now();
   window[cb] = (data) => {
     delete window[cb];
@@ -118,7 +139,7 @@ function loadData() {
     teachers = [...new Set(lessons.map(l => l.teacher).filter(Boolean))];
     render();
     renderChips();
-    document.getElementById('sync').textContent = 'מחובר לגיליון ✓';
+    syncStatus('מחובר לגיליון ✓');
   };
   const s = document.createElement('script');
   s.src = `${URL}?callback=${cb}&t=${Date.now()}`;
@@ -131,7 +152,7 @@ function renderChips() {
   teachers.forEach(t => {
     const chip = document.createElement('span');
     chip.className = `chip ${selectedT === t ? 'active' : ''}`;
-    chip.innerHTML = `${t} <span class="delete-chip" onclick="deleteTeacher('${t}', event)">×</span>`;
+    chip.innerHTML = `${t} <span class="delete-x" onclick="deleteTeacher('${t}', event)">×</span>`;
     chip.onclick = () => { selectedT = (selectedT === t) ? null : t; render(); renderChips(); };
     container.appendChild(chip);
   });
@@ -142,16 +163,17 @@ function render() {
   tbody.innerHTML = '';
   const filtered = lessons.filter(l => !selectedT || l.teacher === selectedT);
 
-  filtered.forEach((l, index) => {
+  filtered.forEach(l => {
+    const { display, dayName } = parseDate(l.date);
     const tr = document.createElement('tr');
     tr.innerHTML = `
-      <td><input type="text" value="${l.date || ''}" onchange="updateCell(${l.rowIndex}, 'date', this.value)"></td>
-      <td>${l.day || ''}</td>
-      <td><input type="text" value="${l.time || ''}" onchange="updateCell(${l.rowIndex}, 'time', this.value)"></td>
-      <td><input type="text" value="${l.type || ''}" onchange="updateCell(${l.rowIndex}, 'type', this.value)"></td>
-      <td><input type="text" value="${l.loc || ''}" onchange="updateCell(${l.rowIndex}, 'loc', this.value)"></td>
+      <td><input class="cell-edit" type="text" value="${display}" onchange="updateCell(${l.rowIndex}, 'date', this.value)"></td>
+      <td style="font-weight:bold">${dayName || l.day || ''}</td>
+      <td><input class="cell-edit" type="text" value="${l.time || ''}" onchange="updateCell(${l.rowIndex}, 'time', this.value)"></td>
+      <td><input class="cell-edit" type="text" value="${l.type || ''}" onchange="updateCell(${l.rowIndex}, 'type', this.value)"></td>
+      <td><input class="cell-edit" type="text" value="${l.loc || ''}" onchange="updateCell(${l.rowIndex}, 'loc', this.value)"></td>
       <td>
-        <select onchange="updateCell(${l.rowIndex}, 'teacher', this.value)">
+        <select class="assign" onchange="updateCell(${l.rowIndex}, 'teacher', this.value)">
           <option value="">בחר מורה...</option>
           ${teachers.map(t => `<option value="${t}" ${l.teacher === t ? 'selected' : ''}>${t}</option>`).join('')}
         </select>
@@ -160,6 +182,10 @@ function render() {
     `;
     tbody.appendChild(tr);
   });
+
+  document.getElementById('s-total').textContent = lessons.length;
+  document.getElementById('s-assigned').textContent = lessons.filter(l => l.teacher).length;
+  document.getElementById('s-pending').textContent = lessons.length - lessons.filter(l => l.teacher).length;
 }
 
 function updateCell(rowIndex, field, value) {
@@ -167,14 +193,14 @@ function updateCell(rowIndex, field, value) {
 }
 
 function addRow() {
-  const newRowIndex = lessons.length > 0 ? Math.max(...lessons.map(l => l.rowIndex)) + 1 : 2;
-  lessons.push({ rowIndex: newRowIndex, date: '', day: '', time: '', type: '', loc: '', teacher: '' });
+  const newIdx = lessons.length > 0 ? Math.max(...lessons.map(l => l.rowIndex)) + 1 : 2;
+  lessons.push({ rowIndex: newIdx, date: '', day: '', time: '', type: '', loc: '', teacher: '' });
   render();
-  apiCall('addRow', { rowIndex: newRowIndex });
+  apiCall('addRow', { rowIndex: newIdx });
 }
 
 function deleteRow(rowIndex) {
-  if (confirm('למחוק את השיעור מהמערכת?')) {
+  if (confirm('למחוק את השיעור?')) {
     lessons = lessons.filter(l => l.rowIndex !== rowIndex);
     render();
     apiCall('deleteRow', { rowIndex });
@@ -183,20 +209,16 @@ function deleteRow(rowIndex) {
 
 function addTeacher() {
   const name = prompt('שם מורה חדשה:');
-  if (name && !teachers.includes(name)) {
-    teachers.push(name);
-    renderChips();
-    render();
-  }
+  if (name && !teachers.includes(name)) { teachers.push(name); renderChips(); render(); }
 }
 
 function deleteTeacher(name, e) {
   e.stopPropagation();
-  if (confirm(`להסיר את ${name} מרשימת המורים?`)) {
-    teachers = teachers.filter(t => t !== name);
-    renderChips();
-    render();
-  }
+  if (confirm(`להסיר את ${name}?`)) { teachers = teachers.filter(t => t !== name); renderChips(); render(); }
+}
+
+function shareLink() {
+  navigator.clipboard.writeText('https://zoharrb-ci.github.io/studio-april/').then(() => alert('הקישור הועתק!'));
 }
 
 loadData();
