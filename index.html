@@ -75,7 +75,7 @@
       <button class="btn" onclick="shareLink()">🔗 העתקת קישור</button>
       <button class="btn" onclick="showHelp()">❓ עזרה</button>
       <button class="btn" onclick="loadData()">↻ רענן</button>
-      <span class="version-tag">V1.18</span>
+      <span class="version-tag">V1.19</span>
     </div>
   </div>
 
@@ -150,7 +150,9 @@
 <div id="promptModal" class="modal" style="z-index: 2000;"><div class="modal-content" style="width: 320px;"><h3>מורה חדשה</h3><input type="text" id="prompt-input"><div class="modal-actions"><button class="btn" onclick="closePrompt()">ביטול</button><button class="btn btn-add" onclick="submitPrompt()">אישור</button></div></div></div>
 
 <script>
+// הקישור המעודכן שסיפקת
 const URL = 'https://script.google.com/macros/s/AKfycbzNwaMU3w4nikoXaQpUX2KH_WdbsLosnV3y05V_QLIC9B57VEZPhsREMOa0ULnFWyU-Dw/exec';
+
 let lessons = [], teachers = [], selectedT = null;
 const DAYS = ['ראשון', 'שני', 'שלישי', 'רביעי', 'חמישי', 'שישי', 'שבת'];
 
@@ -201,8 +203,7 @@ function cleanDateDisplay(val) {
     const d = new Date(str);
     if (!isNaN(d.getTime())) return ('0' + d.getDate()).slice(-2) + '/' + ('0' + (d.getMonth() + 1)).slice(-2);
   }
-  const now = new Date();
-  return ('0' + now.getDate()).slice(-2) + '/' + ('0' + (now.getMonth() + 1)).slice(-2);
+  return str;
 }
 
 function cleanDayDisplay(val) {
@@ -233,7 +234,7 @@ function updateDateTime() {
 function loadData() {
   setStatus('מעדכן...', true);
   apiCall({ action: 'load' }, (data) => {
-    // מיון מקומי לתצוגה ראשונית
+    // מיון ראשוני לתצוגה באתר (המיון הסופי מתבצע בגיליון עצמו)
     lessons = data.sort((a, b) => {
       const d1 = cleanDateDisplay(a.date).split('/').reverse().join('');
       const d2 = cleanDateDisplay(b.date).split('/').reverse().join('');
@@ -266,7 +267,7 @@ function render() {
   filtered.forEach(l => {
     const tr = document.createElement('tr');
     tr.innerHTML = `
-      <td><div style="font-weight: bold; color: var(--accent);">${cleanDateDisplay(l.date)}</div></td>
+      <td><input type="text" value="${cleanDateDisplay(l.date)}" style="font-weight: bold; color: var(--accent);" onchange="updateAndRefresh(${l.rowIndex}, 'date', this.value)"></td>
       <td class="day-col">${cleanDayDisplay(l.day)}</td>
       <td><input type="text" value="${l.time || ''}" onchange="updateAndRefresh(${l.rowIndex}, 'time', this.value)"></td>
       <td><input type="text" value="${l.type || ''}" onchange="updateCell(${l.rowIndex}, 'type', this.value)"></td>
@@ -287,7 +288,7 @@ function render() {
   document.getElementById('s-wait').textContent = lessons.length - lessons.filter(l => l.teacher).length;
 }
 
-// פונקציית עדכון שמרעננת את כל הנתונים (שימושי למיון)
+// פונקציית עדכון שמרעננת את כל הנתונים (מפעילה את המיון בשרת וטוענת מחדש)
 function updateAndRefresh(rowIndex, field, value) {
   setStatus('שומר וממיין...', true);
   apiCall({ action: 'update', rowIndex, field, value }, () => loadData());
@@ -332,6 +333,7 @@ function validateAndUpdateDay() {
   const val = document.getElementById('m-date').value;
   const match = val.match(/^(\d{1,2})\/(\d{1,2})$/);
   if (!match) return false;
+  // הנחת יסוד 2026 לפי המערכת שלך
   const d = new Date(2026, parseInt(match[2])-1, parseInt(match[1]));
   document.getElementById('m-day').value = DAYS[d.getDay()];
   return true;
@@ -351,7 +353,7 @@ function saveNewLesson() {
     type: document.getElementById('m-type').value,
     teacher: document.getElementById('m-teacher').value
   };
-  setStatus('מוסיף...', true);
+  setStatus('מוסיף וממיין...', true);
   apiCall(data, () => { closeAddLessonModal(); loadData(); });
 }
 
